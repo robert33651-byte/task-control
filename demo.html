@@ -77,6 +77,16 @@
   .task-title{font-weight:600;font-size:15px}
   .task-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
   .task-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+  .task.p2{border-left:4px solid #e03131}
+  .task.p1{border-left:4px solid #f08c00}
+  .prio{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;margin-right:6px;vertical-align:1px}
+  .prio.p2{background:#fde8e8;color:#c92a2a}
+  .prio.p1{background:#fff1d6;color:#b36200}
+  .prio-set{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+  .prio-set button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;font:inherit;font-size:12.5px;cursor:pointer}
+  .prio-set button.on.p0{background:var(--grey-soft);border-color:var(--grey);color:var(--ink)}
+  .prio-set button.on.p1{background:#fff1d6;border-color:#f08c00;color:#b36200}
+  .prio-set button.on.p2{background:#fde8e8;border-color:#e03131;color:#c92a2a}
   .chip{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
   .chip.new{background:var(--grey-soft);color:var(--grey)}
   .chip.viewed{background:var(--blue-soft);color:var(--blue)}
@@ -255,9 +265,9 @@ var sb=(function(){
       {id:W2,name:'Մարինե Հակոբյան',role:'worker',active:true}
     ],
     tasks:[
-      {id:'t1',title:'Հարկային հաշվարկ՝ հոկտեմբեր',description:'Պատրաստել ԱԱՀ և շահութահարկի հաշվարկը հոկտեմբերի համար, ուղարկել Excel-ով։',due:null,assignee:W1,created_by:B,created_at:ago(300),accepted_at:null,returned_at:null,return_comment:null},
+      {id:'t1',title:'Հարկային հաշվարկ՝ հոկտեմբեր',description:'Պատրաստել ԱԱՀ և շահութահարկի հաշվարկը հոկտեմբերի համար, ուղարկել Excel-ով։',due:null,assignee:W1,priority:2,created_by:B,created_at:ago(300),accepted_at:null,returned_at:null,return_comment:null},
       {id:'t2',title:'Աշխատավարձի տեղեկագիր',description:'Նոյեմբերի աշխատավարձի ամփոփ աղյուսակ բոլոր բաժինների համար։',due:null,assignee:W2,created_by:B,created_at:ago(200),accepted_at:null,returned_at:null,return_comment:null},
-      {id:'t3',title:'Պայմանագրերի համադրում',description:'Համադրել մատակարարների հետ փոխհաշվարկները։',due:null,assignee:null,created_by:B,created_at:ago(60),accepted_at:null,returned_at:null,return_comment:null},
+      {id:'t3',title:'Պայմանագրերի համադրում',description:'Համադրել մատակարարների հետ փոխհաշվարկները։',due:null,assignee:null,priority:1,created_by:B,created_at:ago(60),accepted_at:null,returned_at:null,return_comment:null},
       {id:'t4',title:'Գույքագրման ցուցակ',description:'Հիմնական միջոցների թարմացված ցուցակ։',due:null,assignee:W1,created_by:B,created_at:ago(1500),accepted_at:ago(900),returned_at:null,return_comment:null}
     ],
     task_views:[
@@ -314,7 +324,7 @@ var sb=(function(){
       }
       if(q.op==='insert'){
         var d=Object.assign({},q.data);
-        if(tbl==='tasks'){d.id=uid();d.created_at=new Date().toISOString();d.accepted_at=null;d.returned_at=null;d.return_comment=null}
+        if(tbl==='tasks'){d.priority=d.priority||0;d.id=uid();d.created_at=new Date().toISOString();d.accepted_at=null;d.returned_at=null;d.return_comment=null}
         if(tbl==='task_views'){d.viewed_at=new Date().toISOString();
           if(rows.some(function(r){return r.task_id===d.task_id&&r.user_id===d.user_id}))return {data:null,error:null}}
         if(tbl==='task_messages'){d.id=++mid;d.created_at=new Date().toISOString();d.audio_path=d.audio_path||null;d.audio_secs=d.audio_secs||null;d.audio_peaks=d.audio_peaks||null}
@@ -329,8 +339,9 @@ var sb=(function(){
           }else DB.profiles.filter(function(p){return p.role==='boss'}).forEach(function(p){addNotif(p.id,'💬 '+tk.title,txt)});
         }
         if(tbl==='tasks'){
-          if(d.assignee)addNotif(d.assignee,'Նոր առաջադրանք','«'+d.title+'»');
-          else DB.profiles.filter(function(p){return p.role==='worker'&&p.active}).forEach(function(p){addNotif(p.id,'Նոր առաջադրանք','«'+d.title+'»')});
+          var ttl=d.priority===2?'🔥 Շտապ առաջադրանք':(d.priority===1?'⭐ Կարևոր առաջադրանք':'Նոր առաջադրանք');
+          if(d.assignee)addNotif(d.assignee,ttl,'«'+d.title+'»');
+          else DB.profiles.filter(function(p){return p.role==='worker'&&p.active}).forEach(function(p){addNotif(p.id,ttl,'«'+d.title+'»')});
         }
         return {data:null,error:null};
       }
@@ -351,6 +362,9 @@ var sb=(function(){
           if(tbl==='tasks'){
             var sub=DB.submissions.find(function(s){return s.task_id===r.id});
             var rc=sub?sub.done_by:r.assignee;
+            if(r.priority!==old.priority&&!r.accepted_at){var lb=r.priority===2?'🔥 Շտապ':(r.priority===1?'⭐ Կարևոր':'Սովորական');
+              if(r.assignee)addNotif(r.assignee,'Կարևորությունը փոխվել է','«'+r.title+'» — '+lb);
+              else DB.profiles.filter(function(p){return p.role==='worker'&&p.active}).forEach(function(p){addNotif(p.id,'Կարևորությունը փոխվել է','«'+r.title+'» — '+lb)});}
             if(r.accepted_at&&!old.accepted_at&&rc)addNotif(rc,'Աշխատանքն ընդունված է','«'+r.title+'»');
             if(r.returned_at&&old.returned_at!==r.returned_at&&rc)addNotif(rc,'Վերադարձվել է լրամշակման','«'+r.title+'»'+(r.return_comment?' — '+r.return_comment:''));
           }
@@ -705,6 +719,9 @@ async function togglePush(){toast('Demo․ իրական հավելվածում �
   updatePushBtn();
 }
 
+var PRIO_NAME=['Սովորական','Կարևոր','Շտապ'];
+function prioBadge(t){return t.priority===2?'<span class="prio p2">🔥 Շտապ</span>':(t.priority===1?'<span class="prio p1">⭐ Կարևոր</span>':'')}
+function byPrio(a,b){return (b.t.priority||0)-(a.t.priority||0)}
 // ---------- derived ----------
 function statusOf(t){
   if(t.accepted_at)return 'accepted';
@@ -751,11 +768,12 @@ async function createTask(){
     description:$('#fDesc').value.trim(),
     due:$('#fDue').value||null,
     assignee:$('#fAssignee').value||null,
+    priority:parseInt($('#fPriority').value||'0',10),
     created_by:me.id
   });
   btn.disabled=false;
   if(r.error){toast('Չհաջողվեց պահպանել');return}
-  $('#fTitle').value='';$('#fDesc').value='';$('#fDue').value='';$('#fAssignee').value='';
+  $('#fTitle').value='';$('#fDesc').value='';$('#fDue').value='';$('#fAssignee').value='';$('#fPriority').value='0';
   toast('Առաջադրանքը ստեղծված է');
   queueReload();
 }
@@ -941,9 +959,11 @@ function renderBoss(){
     +workers.filter(function(p){return p.role==='worker'}).map(function(p){return '<option value="'+p.id+'">'+esc(p.name)+'</option>'}).join('')
     +'</select></div>'
     +'<div class="fld"><label>Վերջնաժամկետ</label><input type="date" id="fDue"></div>'
-    +'</div><button class="btn btn-primary" id="fCreate">Հանձնարարել</button></div>';
+    +'</div>'
+    +'<div class="fld"><label>Կարևորություն</label><select id="fPriority"><option value="0">Սովորական</option><option value="1">⭐ Կարևոր</option><option value="2">🔥 Շտապ</option></select></div>'
+    +'<button class="btn btn-primary" id="fCreate">Հանձնարարել</button></div>';
 
-  var act=withSt.filter(function(x){return x.st!=='accepted'});
+  var act=withSt.filter(function(x){return x.st!=='accepted'}).sort(byPrio);
   if(act.length){h+='<div class="section-label">Ընթացիկ առաջադրանքներ</div>';act.forEach(function(x){h+=taskCard(x.t,x.st,true)})}
   else h+='<div class="empty">Ընթացիկ առաջադրանքներ չկան</div>';
   if(accepted.length){h+='<div class="section-label">Ընդունված</div>';accepted.forEach(function(x){h+=taskCard(x.t,x.st,true)})}
@@ -977,8 +997,8 @@ function renderWorker(){
   var mine=tasks.filter(function(t){return !t.assignee||t.assignee===me.id})
     .map(function(t){return {t:t,st:statusOf(t)}});
   if(!mine.length)return '<div class="empty">Ձեզ համար դեռ առաջադրանքներ չկան</div>';
-  var todo=mine.filter(function(x){return x.st!=='accepted'&&x.st!=='done'});
-  var waiting=mine.filter(function(x){return x.st==='done'});
+  var todo=mine.filter(function(x){return x.st!=='accepted'&&x.st!=='done'}).sort(byPrio);
+  var waiting=mine.filter(function(x){return x.st==='done'}).sort(byPrio);
   var done=mine.filter(function(x){return x.st==='accepted'});
   var h='';
   if(todo.length){h+='<div class="section-label">Պետք է կատարել</div>';todo.forEach(function(x){h+=taskCard(x.t,x.st,false)})}
@@ -993,9 +1013,9 @@ function taskCard(t,st,bossSide){
   if(bossSide)sub.push('Ում՝ '+esc(nameOf(t.assignee)));
   if(t.due)sub.push('Վերջնաժամկետ՝ '+esc(fmtDay(t.due)));
   sub.push('Ստեղծվել է '+fmtDate(t.created_at));
-  var h='<div class="task" data-id="'+t.id+'">'
+  var h='<div class="task'+(t.priority?' p'+t.priority:'')+'" data-id="'+t.id+'">'
     +'<div class="task-head" data-act="toggle">'
-    +'<div><div class="task-title">'+esc(t.title)+'</div><div class="task-sub">'+sub.join(' · ')+'</div></div>'
+    +'<div><div class="task-title">'+prioBadge(t)+esc(t.title)+'</div><div class="task-sub">'+sub.join(' · ')+'</div></div>'
     +'<div class="task-right">'+chipFor(st,bossSide)+((msgs[t.id]||[]).length?'<span class="cnt-badge">💬 '+msgs[t.id].length+'</span>':'')+(bossSide?seenLine(t):'')+'</div>'
     +'</div>';
   if(isOpen){
@@ -1007,6 +1027,9 @@ function taskCard(t,st,bossSide){
         +' <button class="btn btn-ghost btn-sm" data-act="download">Ներբեռնել</button></div>';
     }
     if(s)h+='<div class="meta-line">Կատարվել է՝ '+fmtDate(s.done_at)+' · '+esc(nameOf(s.done_by))+'</div>';
+    if(bossSide&&st!=='accepted'){
+      h+='<div class="prio-set">Կարևորություն․ '+[0,1,2].map(function(n){return '<button class="p'+n+((t.priority||0)===n?' on':'')+'" data-prio="'+n+'">'+(n===2?'🔥 ':n===1?'⭐ ':'')+PRIO_NAME[n]+'</button>'}).join('')+'</div>';
+    }
     if(bossSide){
       if(st==='done'){
         h+='<div class="actions"><button class="btn btn-green" data-act="accept">✓ Ընդունել աշխատանքը</button>'
@@ -1232,6 +1255,12 @@ function bindEvents(){
       fi.addEventListener('change',function(){if(fi.files&&fi.files[0]){if(fi.files[0].size>MAX_FILE){toast('Ֆայլը 50 ՄԲ-ից մեծ է');return}pendingFiles[id]=fi.files[0];render()}});
     }
     var dn=card.querySelector('[data-act=done]');if(dn)dn.addEventListener('click',function(){markDone(t,dn)});
+    card.querySelectorAll('[data-prio]').forEach(function(b){b.addEventListener('click',async function(){
+      var n=parseInt(b.getAttribute('data-prio'),10);if((t.priority||0)===n)return;
+      var r=await sb.from('tasks').update({priority:n}).eq('id',t.id);
+      if(r.error){toast('Չհաջողվեց');return}
+      toast('Կարևորությունը փոխված է');queueReload();
+    })});
     bindChat(card,t);
   });
   var c=$('#fCreate');if(c)c.addEventListener('click',createTask);
