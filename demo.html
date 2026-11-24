@@ -158,6 +158,7 @@
   .rec-live{flex:1;display:flex;align-items:center;gap:2px;height:28px;overflow:hidden;justify-content:flex-end}
   .rec-live i{width:3px;flex:none;border-radius:2px;background:#e03131;display:block}
   .chat-closed{color:var(--muted);font-size:13px;margin-top:8px}
+  .vico{height:1.2em;width:auto;vertical-align:-.25em;margin-right:3px}
   .cnt-badge{font-size:12px;color:var(--muted);margin-left:6px}
 
 #demoBar{position:sticky;top:0;z-index:999;background:#1a2433;color:#fff;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font:13px system-ui}
@@ -843,7 +844,7 @@ function renderBell(){
   var list=$('#notifList');
   if(!notifs.length){list.innerHTML='<div class="notif-empty">Ծանուցումներ չկան</div>';return}
   list.innerHTML=notifs.map(function(n){
-    return '<div class="notif-item'+(n.read_at?'':' unread')+'">'+esc(n.title)+(n.body?('<br>'+esc(n.body)):'')+'<span class="when">'+fmtDate(n.created_at)+'</span></div>';
+    return '<div class="notif-item'+(n.read_at?'':' unread')+'">'+esc(n.title)+(n.body?('<br>'+icoVoice(esc(n.body))):'')+'<span class="when">'+fmtDate(n.created_at)+'</span></div>';
   }).join('');
 }
 $('#bellBtn').addEventListener('click',async function(e){
@@ -1031,6 +1032,7 @@ function taskCard(t,st,bossSide){
 // ---------- чат задачи (текст + голосовые) ----------
 var MAX_VOICE_SEC=180;
 function fmtDur(n){n=Math.max(0,Math.round(n||0));return Math.floor(n/60)+':'+p2(n%60)}
+function icoVoice(h){return h.replace(/🎤/g,'<img class="vico" src="icons/voice.png" alt="">')}
 function barsHtml(peaks,n){
   var a=(peaks&&peaks.length)?peaks:null,h='';
   for(var i=0;i<n;i++){
@@ -1049,7 +1051,7 @@ function msgHtml(m){
       +'<div class="wave">'+barsHtml(m.audio_peaks,32)+'</div><span class="vtime">'+fmtDur(m.audio_secs)+'</span></div>';
   }
   if(m.body)h+='<div class="mtext">'+esc(m.body)+'</div>';
-  return h+'<div class="mtime">'+fmtDate(m.created_at)+'</div></div></div>';
+  return h+'<div class="mtime">'+(m.audio_path?'<img class="vico" src="icons/voice.png" alt="">':'')+fmtDate(m.created_at)+'</div></div></div>';
 }
 function composerHtml(t){
   var id=t.id;
