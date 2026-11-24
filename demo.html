@@ -123,6 +123,43 @@
   .settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
   .settings-row:last-child{border-bottom:none}
 
+  /* ----- чат задачи ----- */
+  .chat{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .chat-title{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px}
+  .chat-list{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:8px;background:#eef2f7;border-radius:12px}
+  .chat-empty{color:var(--muted);font-size:13px;text-align:center;padding:10px}
+  .msg{display:flex;flex-direction:column;max-width:82%}
+  .msg.me{align-self:flex-end;align-items:flex-end}
+  .msg.they{align-self:flex-start;align-items:flex-start}
+  .mname{font-size:11.5px;font-weight:600;color:var(--accent);margin:0 6px 2px}
+  .bubble{background:#fff;border-radius:12px;padding:7px 10px 4px;box-shadow:var(--shadow);min-width:70px}
+  .msg.me .bubble{background:#dcf1d6}
+  .mtext{white-space:pre-wrap;word-break:break-word;font-size:14.5px}
+  .mtime{font-size:10.5px;color:var(--muted);text-align:right;margin-top:2px}
+  .vmsg{display:flex;align-items:center;gap:8px;min-width:210px}
+  .vplay{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:14px;cursor:pointer}
+  .msg.me .vplay{background:#2e9e5b}
+  .wave{flex:1;display:flex;align-items:center;gap:2px;height:30px}
+  .wave i{flex:1;min-width:2px;border-radius:2px;background:#b8c2d1;display:block}
+  .wave i.on{background:var(--accent)}
+  .msg.me .wave i.on{background:#2e9e5b}
+  .vtime{flex:none;font-size:11.5px;color:var(--muted);min-width:34px;text-align:right}
+  .composer{display:flex;align-items:flex-end;gap:8px;margin-top:8px}
+  .chat-input{flex:1;resize:none;border:1px solid var(--line);border-radius:20px;padding:9px 14px;font:inherit;max-height:110px;background:#fff}
+  .chat-input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .cbtn{flex:none;width:42px;height:42px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:18px;cursor:pointer}
+  .cbtn.mic{background:var(--accent)}
+  .cbtn.ghost{background:var(--grey-soft);color:var(--grey)}
+  .cbtn:disabled{opacity:.45;cursor:default}
+  .recbar{flex:1;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:5px 12px;min-height:42px}
+  .rec-dot{width:10px;height:10px;border-radius:50%;background:#e03131;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .rec-time{font-variant-numeric:tabular-nums;font-size:14px;min-width:38px}
+  .rec-live{flex:1;display:flex;align-items:center;gap:2px;height:28px;overflow:hidden;justify-content:flex-end}
+  .rec-live i{width:3px;flex:none;border-radius:2px;background:#e03131;display:block}
+  .chat-closed{color:var(--muted);font-size:13px;margin-top:8px}
+  .cnt-badge{font-size:12px;color:var(--muted);margin-left:6px}
+
 #demoBar{position:sticky;top:0;z-index:999;background:#1a2433;color:#fff;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font:13px system-ui}
 #demoBar b{background:#f5a623;color:#1a2433;padding:2px 8px;border-radius:6px;margin-right:4px}
 #demoBar button{background:#34435a;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit}
@@ -235,17 +272,35 @@ var sb=(function(){
       {id:'n3',recipient:W2,title:'Նոր առաջադրանք',body:'«Պայմանագրերի համադրում»',created_at:ago(60),read_at:null},
       {id:'n4',recipient:W1,title:'Նոր առաջադրանք',body:'«Պայմանագրերի համադրում»',created_at:ago(60),read_at:null}
     ],
+    task_messages:[
+      {id:1,task_id:'t1',sender:B,body:'Անի, խնդրում եմ նաև ավելացրու նախորդ ամսվա համեմատությունը։',audio_path:null,audio_secs:null,audio_peaks:null,created_at:ago(240)},
+      {id:2,task_id:'t1',sender:W1,body:'',audio_path:'demo/v_seed1.wav',audio_secs:4,audio_peaks:[20,35,50,70,55,40,65,85,60,45,30,55,75,90,70,50,35,25,45,65,80,60,40,30,50,70,55,35,25,40,60,45,30,20,35,50,40,25,15,10],created_at:ago(200)},
+      {id:3,task_id:'t1',sender:B,body:'Շնորհակալություն, սպասում եմ։',audio_path:null,audio_secs:null,audio_peaks:null,created_at:ago(190)}
+    ],
     push_subscriptions:[]
   };
+  var blobs={};
+  (function(){var sr=8000,n=sr*4,buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+    function w(o,s){for(var i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))}
+    w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+    for(var i=0;i<n;i++){var t=i/sr,f=300+120*Math.sin(t*3),a=0.25*Math.sin(Math.PI*Math.min(1,t*4))*Math.sin(Math.PI*Math.min(1,(4-t)*4));v.setInt16(44+i*2,Math.sin(2*Math.PI*f*t)*a*32767,true)}
+    blobs['demo/v_seed1.wav']=new Blob([buf],{type:'audio/wav'});})();
   window.__DEMO_DB=DB;
   var listeners=[];
   function fireNotif(n){listeners.forEach(function(f){try{f({'new':n})}catch(e){}})}
   function addNotif(rcpt,title,body){var n={id:uid(),recipient:rcpt,title:title,body:body,created_at:new Date().toISOString(),read_at:null};DB.notifications.push(n);fireNotif(n)}
   var pk={tasks:'id',profiles:'id',notifications:'id',submissions:'task_id'};
+  var mid=100;
   function Q(tbl){
     var q={tbl:tbl,op:'select',filters:[],ord:null,lim:null,data:null,single:false,conflict:null};
     function exec(){
       var rows=DB[tbl];
+      if(me&&me.role==='worker'){
+        var vis=function(id){var t=DB.tasks.find(function(x){return x.id===id});return t&&(!t.assignee||t.assignee===me.id)};
+        if(tbl==='tasks')rows=rows.filter(function(r){return !r.assignee||r.assignee===me.id});
+        if(tbl==='task_views'||tbl==='submissions'||tbl==='task_messages')rows=rows.filter(function(r){return vis(r.task_id)});
+      }
+      if(me&&tbl==='notifications')rows=rows.filter(function(r){return r.recipient===me.id});
       var f=function(r){return q.filters.every(function(x){return x(r)})};
       if(q.op==='select'){
         var out=rows.filter(f).map(function(r){return Object.assign({},r)});
@@ -259,7 +314,17 @@ var sb=(function(){
         if(tbl==='tasks'){d.id=uid();d.created_at=new Date().toISOString();d.accepted_at=null;d.returned_at=null;d.return_comment=null}
         if(tbl==='task_views'){d.viewed_at=new Date().toISOString();
           if(rows.some(function(r){return r.task_id===d.task_id&&r.user_id===d.user_id}))return {data:null,error:null}}
+        if(tbl==='task_messages'){d.id=++mid;d.created_at=new Date().toISOString();d.audio_path=d.audio_path||null;d.audio_secs=d.audio_secs||null;d.audio_peaks=d.audio_peaks||null}
         DB[tbl].push(d);
+        if(tbl==='task_messages'){
+          var tk=DB.tasks.find(function(x){return x.id===d.task_id});var sp=DB.profiles.find(function(x){return x.id===d.sender});
+          var txt=d.audio_path?('🎤 '+Math.floor(d.audio_secs/60)+':'+('0'+d.audio_secs%60).slice(-2)):d.body.slice(0,120);
+          txt=sp.name+'․ '+txt;
+          if(sp.role==='boss'){
+            if(tk.assignee)addNotif(tk.assignee,'💬 '+tk.title,txt);
+            else DB.profiles.filter(function(p){return p.role==='worker'&&p.active}).forEach(function(p){addNotif(p.id,'💬 '+tk.title,txt)});
+          }else DB.profiles.filter(function(p){return p.role==='boss'}).forEach(function(p){addNotif(p.id,'💬 '+tk.title,txt)});
+        }
         if(tbl==='tasks'){
           if(d.assignee)addNotif(d.assignee,'Նոր առաջադրանք','«'+d.title+'»');
           else DB.profiles.filter(function(p){return p.role==='worker'&&p.active}).forEach(function(p){addNotif(p.id,'Նոր առաջադրանք','«'+d.title+'»')});
@@ -312,9 +377,9 @@ var sb=(function(){
   return {
     from:Q,
     storage:{from:function(){return {
-      upload:function(){return Promise.resolve({error:null})},
+      upload:function(path,blob){blobs[path]=blob;return Promise.resolve({error:null})},
       remove:function(){return Promise.resolve({error:null})},
-      createSignedUrl:function(){return Promise.resolve({data:{signedUrl:'data:text/plain;charset=utf-8,'+encodeURIComponent('Demo file — in the real app this is your uploaded Excel.')},error:null})}
+      createSignedUrl:function(path){var b=blobs[path];return Promise.resolve({data:{signedUrl:b?URL.createObjectURL(b):'data:text/plain;charset=utf-8,'+encodeURIComponent('Demo file')},error:null})}
     }}},
     channel:function(){var ch={on:function(t,f,cb){if(f&&f.table==='notifications'&&typeof cb==='function')listeners.push(cb);return ch},subscribe:function(){return ch}};return ch},
     auth:{signOut:function(){return Promise.resolve()},updateUser:function(){return Promise.resolve({error:null})},onAuthStateChange:function(){}}
@@ -326,7 +391,8 @@ var screenEl=$('#screen');
 
 var me=null;            // profile {id,name,role}
 var session=null;
-var profiles=[], tasks=[], views=[], subs={}, notifs=[];
+var profiles=[], tasks=[], views=[], subs={}, notifs=[], msgs={};
+var drafts={}, stickBottom={};
 var expanded={}, pendingFiles={}, returnTaskId=null, pwTargetUid=null;
 var flashTimer=null, flashOn=false, unreadNow=0;
 var isMobile=false;
@@ -555,13 +621,15 @@ async function reloadAll(){
     sb.from('tasks').select('*').order('created_at',{ascending:false}),
     sb.from('task_views').select('*'),
     sb.from('submissions').select('*'),
-    sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(30)
+    sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(30),
+    sb.from('task_messages').select('*').order('created_at',{ascending:true})
   ]);
   if(r[0].data)profiles=r[0].data;
   if(r[1].data)tasks=r[1].data;
   if(r[2].data)views=r[2].data;
   if(r[3].data){subs={};r[3].data.forEach(function(s){subs[s.task_id]=s})}
   if(r[4].data)notifs=r[4].data;
+  if(r[5]&&r[5].data){msgs={};r[5].data.forEach(function(m){(msgs[m.task_id]=msgs[m.task_id]||[]).push(m)})}
   markVisibleViewed();
   render();
 }
@@ -577,6 +645,7 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},queueReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'task_views'},queueReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'submissions'},queueReload)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'task_messages'},queueReload)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications'},function(p){
       var n=p['new'];
       if(n&&n.recipient===me.id){toast('🔔 '+n.title+(n.body?'․ '+n.body:''));beep()}
@@ -725,7 +794,9 @@ async function acceptTask(t){
 }
 async function deleteTask(t){
   var s=subs[t.id];
-  if(s&&s.file_path)await sb.storage.from('files').remove([s.file_path]);
+  var rm=[];if(s&&s.file_path)rm.push(s.file_path);
+  (msgs[t.id]||[]).forEach(function(m){if(m.audio_path)rm.push(m.audio_path)});
+  if(rm.length)await sb.storage.from('files').remove(rm);
   var r=await sb.from('tasks').delete().eq('id',t.id);
   if(r.error){toast('Չհաջողվեց ջնջել');return}
   toast('Ջնջված է');queueReload();
@@ -832,10 +903,21 @@ async function doLogout(msg){
 function render(){
   if(!me)return;
   renderBell();
+  var ae=document.activeElement, keep=null;
+  if(ae&&ae.classList&&ae.classList.contains('chat-input'))keep={id:ae.getAttribute('data-task'),a:ae.selectionStart,b:ae.selectionEnd};
+  var sc={};
+  screenEl.querySelectorAll('.chat-list').forEach(function(l){sc[l.getAttribute('data-task')]={t:l.scrollTop,bot:(l.scrollHeight-l.scrollTop-l.clientHeight)<40}});
   var h='';
   if(me.role==='boss')h=renderBoss();else h=renderWorker();
   screenEl.innerHTML=h;
   bindEvents();
+  screenEl.querySelectorAll('.chat-list').forEach(function(l){
+    var id=l.getAttribute('data-task'),o=sc[id];
+    if(stickBottom[id]||!o||o.bot)l.scrollTop=l.scrollHeight;else l.scrollTop=o.t;
+    delete stickBottom[id];
+  });
+  if(keep){var ta=screenEl.querySelector('.chat-input[data-task="'+keep.id+'"]');if(ta){ta.focus();try{ta.setSelectionRange(keep.a,keep.b)}catch(e){}}}
+  updatePlayUI();
 }
 function renderBoss(){
   var withSt=tasks.map(function(t){return {t:t,st:statusOf(t)}});
@@ -911,7 +993,7 @@ function taskCard(t,st,bossSide){
   var h='<div class="task" data-id="'+t.id+'">'
     +'<div class="task-head" data-act="toggle">'
     +'<div><div class="task-title">'+esc(t.title)+'</div><div class="task-sub">'+sub.join(' · ')+'</div></div>'
-    +'<div class="task-right">'+chipFor(st,bossSide)+(bossSide?seenLine(t):'')+'</div>'
+    +'<div class="task-right">'+chipFor(st,bossSide)+((msgs[t.id]||[]).length?'<span class="cnt-badge">💬 '+msgs[t.id].length+'</span>':'')+(bossSide?seenLine(t):'')+'</div>'
     +'</div>';
   if(isOpen){
     h+='<div class="task-body">';
@@ -940,9 +1022,192 @@ function taskCard(t,st,bossSide){
       if(st==='done')h+='<div class="meta-line">Ուղարկված է ստուգման։ Սպասեք ղեկավարի որոշմանը։</div>';
       if(st==='accepted'&&t.accepted_at)h+='<div class="meta-line">✓ Ընդունվել է '+fmtDate(t.accepted_at)+'</div>';
     }
+    h+=chatHtml(t);
     h+='</div>';
   }
   return h+'</div>';
+}
+
+// ---------- чат задачи (текст + голосовые) ----------
+var MAX_VOICE_SEC=180;
+function fmtDur(n){n=Math.max(0,Math.round(n||0));return Math.floor(n/60)+':'+p2(n%60)}
+function barsHtml(peaks,n){
+  var a=(peaks&&peaks.length)?peaks:null,h='';
+  for(var i=0;i<n;i++){
+    var v=a?a[Math.min(a.length-1,Math.floor(i*a.length/n))]:(30+((i*37)%50));
+    h+='<i style="height:'+Math.max(10,Math.min(100,v))+'%"></i>';
+  }
+  return h;
+}
+function msgHtml(m){
+  var mine=m.sender===me.id;
+  var h='<div class="msg '+(mine?'me':'they')+'">';
+  if(!mine)h+='<div class="mname">'+esc(nameOf(m.sender))+'</div>';
+  h+='<div class="bubble">';
+  if(m.audio_path){
+    h+='<div class="vmsg" data-mid="'+m.id+'"><button class="vplay" data-play="'+m.id+'" aria-label="Լսել">▶</button>'
+      +'<div class="wave">'+barsHtml(m.audio_peaks,32)+'</div><span class="vtime">'+fmtDur(m.audio_secs)+'</span></div>';
+  }
+  if(m.body)h+='<div class="mtext">'+esc(m.body)+'</div>';
+  return h+'<div class="mtime">'+fmtDate(m.created_at)+'</div></div></div>';
+}
+function composerHtml(t){
+  var id=t.id;
+  if(rec&&rec.task===id){
+    if(rec.uploading)return '<div class="composer"><div class="recbar"><span class="spin"></span> Ուղարկվում է…</div></div>';
+    return '<div class="composer"><button class="cbtn ghost" data-act="rec-cancel" aria-label="Չեղարկել">🗑</button>'
+      +'<div class="recbar"><span class="rec-dot"></span><span class="rec-time" id="recTime">0:00</span><div class="rec-live" id="recLive"></div></div>'
+      +'<button class="cbtn" data-act="rec-send" aria-label="Ուղարկել">➤</button></div>';
+  }
+  var d=drafts[id]||'';
+  var canRec=!!(window.MediaRecorder&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  return '<div class="composer"><textarea class="chat-input" rows="1" data-task="'+id+'" maxlength="2000" placeholder="Գրեք հաղորդագրություն…">'+esc(d)+'</textarea>'
+    +'<button class="cbtn" data-act="send" aria-label="Ուղարկել" style="'+(d.trim()?'':'display:none')+'">➤</button>'
+    +(canRec?'<button class="cbtn mic" data-act="mic" aria-label="Ձայնային հաղորդագրություն" style="'+(d.trim()?'display:none':'')+'"'+(rec?' disabled':'')+'>🎤</button>':'')
+    +'</div>';
+}
+function chatHtml(t){
+  var list=msgs[t.id]||[];
+  var h='<div class="chat"><div class="chat-title">💬 Քննարկում</div>'
+    +'<div class="chat-list" data-task="'+t.id+'">'
+    +(list.length?list.map(msgHtml).join(''):'<div class="chat-empty">Հաղորդագրություններ դեռ չկան</div>')+'</div>';
+  if(t.accepted_at)h+='<div class="chat-closed">Աշխատանքն ընդունված է․ քննարկումը փակ է։</div>';
+  else h+=composerHtml(t);
+  return h+'</div>';
+}
+async function sendText(id){
+  var ta=screenEl.querySelector('.chat-input[data-task="'+id+'"]');
+  var txt=((ta?ta.value:drafts[id])||'').trim();
+  if(!txt)return;
+  drafts[id]='';stickBottom[id]=true;
+  if(ta){ta.value='';ta.dispatchEvent(new Event('input'))}
+  var r=await sb.from('task_messages').insert({task_id:id,sender:me.id,body:txt});
+  if(r.error){drafts[id]=txt;toast('Չհաջողվեց ուղարկել');render();return}
+  queueReload();
+}
+// --- запись ---
+var rec=null;
+async function recStart(taskId){
+  if(rec)return;
+  var stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+  catch(e){toast('Միկրոֆոնը հասանելի չէ․ թույլատրեք այն բրաուզերում');return}
+  var mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'].filter(function(m){try{return MediaRecorder.isTypeSupported(m)}catch(e){return false}})[0]||'';
+  var mr;
+  try{mr=new MediaRecorder(stream,mime?{mimeType:mime}:undefined)}catch(e){stream.getTracks().forEach(function(t){t.stop()});toast('Բրաուզերը չի աջակցում ձայնագրությունը');return}
+  var r={task:taskId,mr:mr,stream:stream,chunks:[],start:Date.now(),levels:[],send:false,mime:mr.mimeType||mime||'audio/webm'};
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    r.ac=new AC();var src=r.ac.createMediaStreamSource(stream);
+    r.an=r.ac.createAnalyser();r.an.fftSize=512;src.connect(r.an);r.buf=new Uint8Array(r.an.fftSize);
+  }catch(e){}
+  mr.ondataavailable=function(e){if(e.data&&e.data.size)r.chunks.push(e.data)};
+  mr.onstop=function(){recFinish(r)};
+  rec=r;
+  mr.start(250);
+  r.timer=setInterval(recTick,100);
+  render();
+}
+function recTick(){
+  if(!rec)return;
+  var r=rec,el=(Date.now()-r.start)/1000,lv=0.15;
+  if(r.an){r.an.getByteTimeDomainData(r.buf);var m=0;for(var i=0;i<r.buf.length;i++){m=Math.max(m,Math.abs(r.buf[i]-128))}lv=Math.min(1,m/90)}
+  r.levels.push(lv);
+  var t=$('#recTime');if(t)t.textContent=fmtDur(el);
+  var live=$('#recLive');
+  if(live){live.innerHTML=r.levels.slice(-40).map(function(v){return '<i style="height:'+Math.max(12,Math.round(v*100))+'%"></i>'}).join('')}
+  if(el>=MAX_VOICE_SEC)recStop(true);
+}
+function recStop(send){
+  if(!rec||rec.stopping)return;
+  var r=rec;r.stopping=true;r.send=send;r.dur=(Date.now()-r.start)/1000;
+  clearInterval(r.timer);
+  if(send){r.uploading=true;render()}
+  try{r.mr.stop()}catch(e){recFinish(r)}
+  r.stream.getTracks().forEach(function(t){t.stop()});
+  try{if(r.ac)r.ac.close()}catch(e){}
+}
+async function recFinish(r){
+  if(r.finished)return;r.finished=true;
+  if(!r.send){rec=null;render();return}
+  if(r.dur<1||!r.chunks.length){rec=null;toast('Ձայնագրությունը չափազանց կարճ է');render();return}
+  var blob=new Blob(r.chunks,{type:r.mime});
+  var secs=Math.max(1,Math.min(200,Math.round(r.dur)));
+  var N=40,peaks=[],mx=0.05;
+  r.levels.forEach(function(v){if(v>mx)mx=v});
+  for(var i=0;i<N;i++){
+    var a=Math.floor(i*r.levels.length/N),b=Math.max(a+1,Math.floor((i+1)*r.levels.length/N)),m=0;
+    for(var j=a;j<b&&j<r.levels.length;j++)m=Math.max(m,r.levels[j]);
+    peaks.push(Math.max(10,Math.round(m/mx*100)));
+  }
+  var ext=/mp4/.test(r.mime)?'m4a':(/ogg/.test(r.mime)?'ogg':'webm');
+  var path=r.task+'/'+me.id+'/v_'+Date.now()+'.'+ext;
+  var up=await sb.storage.from('files').upload(path,blob,{contentType:r.mime.split(';')[0]});
+  if(up.error){rec=null;toast('Չհաջողվեց ուղարկել ձայնագրությունը');render();return}
+  var ins=await sb.from('task_messages').insert({task_id:r.task,sender:me.id,body:'',audio_path:path,audio_secs:secs,audio_peaks:peaks});
+  if(ins.error){try{await sb.storage.from('files').remove([path])}catch(e){}rec=null;toast('Չհաջողվեց ուղարկել');render();return}
+  stickBottom[r.task]=true;rec=null;render();queueReload();
+}
+// --- воспроизведение ---
+var audioEl=new Audio(), playing={mid:null,loading:false}, blobCache={};
+audioEl.addEventListener('timeupdate',updatePlayUI);
+audioEl.addEventListener('pause',updatePlayUI);
+audioEl.addEventListener('play',updatePlayUI);
+audioEl.addEventListener('ended',function(){playing.mid=null;updatePlayUI()});
+function findMsg(mid){for(var k in msgs){var m=msgs[k].find(function(x){return String(x.id)===String(mid)});if(m)return m}return null}
+function updatePlayUI(){
+  screenEl.querySelectorAll('.vmsg').forEach(function(v){
+    var mid=v.getAttribute('data-mid'),m=findMsg(mid);if(!m)return;
+    var act=playing.mid!==null&&String(playing.mid)===mid;
+    var btn=v.querySelector('.vplay'),bars=v.querySelectorAll('.wave i'),tm=v.querySelector('.vtime');
+    var p=act&&m.audio_secs?Math.min(1,audioEl.currentTime/m.audio_secs):0;
+    btn.textContent=act?(playing.loading?'…':(audioEl.paused?'▶':'⏸')):'▶';
+    for(var i=0;i<bars.length;i++)bars[i].className=(act&&i<Math.round(p*bars.length))?'on':'';
+    tm.textContent=act&&!playing.loading&&(audioEl.currentTime>0)?fmtDur(audioEl.currentTime):fmtDur(m.audio_secs);
+  });
+}
+async function playVoice(mid){
+  var m=findMsg(mid);if(!m||!m.audio_path)return;
+  if(playing.mid!==null&&String(playing.mid)===String(mid)&&!playing.loading){
+    if(audioEl.paused)audioEl.play().catch(function(){});else audioEl.pause();
+    return;
+  }
+  audioEl.pause();
+  playing={mid:mid,loading:true};updatePlayUI();
+  var url=blobCache[m.audio_path];
+  if(!url){
+    var r=await sb.storage.from('files').createSignedUrl(m.audio_path,120);
+    if(r.error||!r.data){playing={mid:null,loading:false};toast('Չհաջողվեց բացել ձայնագրությունը');updatePlayUI();return}
+    try{var resp=await fetch(r.data.signedUrl);var bl=await resp.blob();url=URL.createObjectURL(bl);blobCache[m.audio_path]=url}
+    catch(e){playing={mid:null,loading:false};toast('Չհաջողվեց բեռնել ձայնագրությունը');updatePlayUI();return}
+  }
+  if(String(playing.mid)!==String(mid))return;
+  playing.loading=false;
+  audioEl.src=url;
+  audioEl.play().catch(function(){playing={mid:null,loading:false};updatePlayUI()});
+}
+function bindChat(card,t){
+  var id=t.id;
+  var ta=card.querySelector('.chat-input');
+  var send=card.querySelector('[data-act=send]'),mic=card.querySelector('[data-act=mic]');
+  if(ta){
+    var fit=function(){ta.style.height='auto';ta.style.height=Math.min(110,ta.scrollHeight)+'px'};
+    ta.addEventListener('input',function(){
+      drafts[id]=ta.value;fit();
+      var has=!!ta.value.trim();
+      if(send)send.style.display=has?'':'none';
+      if(mic)mic.style.display=has?'none':'';
+    });
+    ta.addEventListener('keydown',function(e){
+      if(e.key==='Enter'&&!e.shiftKey&&!isMobile){e.preventDefault();sendText(id)}
+    });
+    fit();
+  }
+  if(send)send.addEventListener('click',function(){sendText(id)});
+  if(mic)mic.addEventListener('click',function(){recStart(id)});
+  var rc=card.querySelector('[data-act=rec-cancel]');if(rc)rc.addEventListener('click',function(){recStop(false)});
+  var rs=card.querySelector('[data-act=rec-send]');if(rs)rs.addEventListener('click',function(){recStop(true)});
+  card.querySelectorAll('[data-play]').forEach(function(b){b.addEventListener('click',function(){playVoice(b.getAttribute('data-play'))})});
 }
 function bindEvents(){
   screenEl.querySelectorAll('.task').forEach(function(card){
@@ -962,6 +1227,7 @@ function bindEvents(){
       fi.addEventListener('change',function(){if(fi.files&&fi.files[0]){if(fi.files[0].size>MAX_FILE){toast('Ֆայլը 50 ՄԲ-ից մեծ է');return}pendingFiles[id]=fi.files[0];render()}});
     }
     var dn=card.querySelector('[data-act=done]');if(dn)dn.addEventListener('click',function(){markDone(t,dn)});
+    bindChat(card,t);
   });
   var c=$('#fCreate');if(c)c.addEventListener('click',createTask);
   var ec=$('#eCreate');if(ec)ec.addEventListener('click',createEmployee);
