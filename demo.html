@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Demo — Առաջադրանքների վերահսկում</title>
+
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#2457d6">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1a2433; --muted:#6b7686; --line:#e3e8ef;
+    --accent:#2457d6; --accent-soft:#e8eefc;
+    --green:#1a7f4e; --green-soft:#e3f4ea;
+    --orange:#b05c10; --orange-soft:#fdf0df;
+    --red:#b3261e; --red-soft:#fbe9e7;
+    --blue:#1762a8; --blue-soft:#e4f0fa;
+    --grey:#5b6472; --grey-soft:#eceff3;
+    --r:12px; --shadow:0 1px 3px rgba(16,24,40,.07),0 1px 2px rgba(16,24,40,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5;padding-top:env(safe-area-inset-top)}
+  .wrap{max-width:860px;margin:0 auto;padding:20px 14px 64px}
+  header.app{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  header.app h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .hdr-right{display:flex;align-items:center;gap:8px;position:relative}
+  .role-badge{font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+  .icon-btn{position:relative;background:var(--card);border:1px solid var(--line);border-radius:10px;width:38px;height:38px;font-size:16px;cursor:pointer}
+  .icon-btn:hover{background:var(--grey-soft)}
+  .icon-btn .badge{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;border-radius:999px;padding:0 4px;display:none}
+  .notif-panel{position:absolute;right:0;top:46px;width:min(340px,90vw);background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 12px 36px rgba(16,24,40,.18);z-index:60;display:none;overflow:hidden}
+  .notif-panel.open{display:block}
+  .notif-panel h3{font-size:13.5px;font-weight:700;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .notif-list{max-height:320px;overflow:auto}
+  .notif-item{padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .notif-item:last-child{border-bottom:none}
+  .notif-item.unread{color:var(--ink);font-weight:500;background:var(--accent-soft)}
+  .notif-item .when{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
+  .notif-empty{padding:22px 14px;text-align:center;font-size:13px;color:var(--muted)}
+
+  .center-card{max-width:400px;margin:8vh auto 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:26px}
+  .center-card h2{font-size:18px;margin-bottom:4px;text-align:center}
+  .center-card .sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:18px}
+  .center-card img.qr{display:block;margin:0 auto 10px;width:190px;height:190px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .secret-code{font-family:monospace;font-size:12.5px;background:var(--grey-soft);border-radius:8px;padding:8px 10px;word-break:break-all;text-align:center;margin-bottom:12px}
+  .err{background:var(--red-soft);color:var(--red);border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:12px;display:none}
+
+  .banner{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px;text-align:center;color:var(--muted);box-shadow:var(--shadow)}
+  .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:10px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+  .panel h2{font-size:15px;font-weight:600;margin-bottom:12px}
+  .fld{margin-bottom:10px}
+  .fld label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
+  .fld input,.fld textarea,.fld select{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+  .fld textarea{min-height:64px;resize:vertical}
+  .fld input:focus,.fld textarea:focus,.fld select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.row2{grid-template-columns:1fr}}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:8px;padding:9px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:filter .15s}
+  .btn:hover{filter:brightness(.95)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-red{background:var(--red-soft);color:var(--red)}
+  .btn-ghost{background:var(--grey-soft);color:var(--ink)}
+  .btn-sm{padding:7px 12px;font-size:13px}
+  .btn-full{width:100%}
+
+  .task{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+  .task-head{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;cursor:pointer}
+  .task-head:hover{background:#fafbfd}
+  .task-title{font-weight:600;font-size:15px}
+  .task-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .task-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+  .chip{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .chip.new{background:var(--grey-soft);color:var(--grey)}
+  .chip.viewed{background:var(--blue-soft);color:var(--blue)}
+  .chip.done{background:var(--orange-soft);color:var(--orange)}
+  .chip.accepted{background:var(--green-soft);color:var(--green)}
+  .chip.returned{background:var(--red-soft);color:var(--red)}
+  .seen{font-size:11.5px;color:var(--muted);text-align:right;max-width:200px}
+  .seen .eye{color:var(--blue)}
+  .task-body{padding:0 16px 16px;border-top:1px dashed var(--line)}
+  .task-desc{white-space:pre-wrap;color:var(--ink);font-size:14px;padding:12px 0 4px}
+  .meta-line{font-size:12.5px;color:var(--muted);margin:6px 0}
+  .file-pill{display:inline-flex;align-items:center;gap:8px;background:var(--green-soft);border-radius:8px;padding:8px 12px;font-size:13px;margin:8px 0;max-width:100%;flex-wrap:wrap}
+  .file-pill b{word-break:break-all}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .return-note{background:var(--red-soft);color:var(--red);border-radius:8px;padding:8px 12px;font-size:13px;margin-top:8px}
+  .upload-zone{border:1.5px dashed var(--line);border-radius:10px;padding:14px;text-align:center;font-size:13.5px;color:var(--muted);margin-top:10px;cursor:pointer}
+  .upload-zone:hover{border-color:var(--accent);color:var(--accent)}
+  .empty{text-align:center;color:var(--muted);padding:36px 16px;font-size:14px}
+  .section-label{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 0 10px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:90vw}
+  .toast.show{opacity:1}
+  .counts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .count-card{flex:1;min-width:104px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow)}
+  .count-card .n{font-size:20px;font-weight:700}
+  .count-card .t{font-size:12px;color:var(--muted)}
+  dialog{border:none;border-radius:var(--r);box-shadow:0 20px 60px rgba(0,0,0,.25);padding:20px;width:min(430px,92vw)}
+  dialog::backdrop{background:rgba(16,24,40,.45)}
+  dialog h3{font-size:16px;margin-bottom:12px}
+  .emp-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .emp-row:last-child{border-bottom:none}
+  .emp-name{font-weight:600;font-size:14px}
+  .emp-mail{font-size:12px;color:var(--muted)}
+  .emp-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .tag.boss{background:var(--orange-soft);color:var(--orange)}
+  .tag.worker{background:var(--blue-soft);color:var(--blue)}
+  .tag.off{background:var(--red-soft);color:var(--red)}
+  .pin-dots{display:flex;gap:12px;justify-content:center;margin:16px 0}
+  .pin-dots i{width:14px;height:14px;border-radius:50%;background:var(--grey-soft);border:1px solid var(--line)}
+  .pin-dots i.on{background:var(--accent);border-color:var(--accent)}
+  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto}
+  .pin-pad button{font-size:20px;font-weight:600;padding:14px 0;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer}
+  .pin-pad button:active{background:var(--accent-soft)}
+  .link-btn{background:none;border:none;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;text-decoration:underline}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .settings-row:last-child{border-bottom:none}
+
+#demoBar{position:sticky;top:0;z-index:999;background:#1a2433;color:#fff;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font:13px system-ui}
+#demoBar b{background:#f5a623;color:#1a2433;padding:2px 8px;border-radius:6px;margin-right:4px}
+#demoBar button{background:#34435a;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit}
+#demoBar button.on{background:#2457d6}
+body.phone{max-width:400px;margin:0 auto;box-shadow:0 0 0 1px #ccc}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app" id="appHeader" style="display:none">
+    <h1>📋 Առաջադրանքներ</h1>
+    <div class="hdr-right">
+      <span class="role-badge" id="roleBadge"></span>
+      <button class="icon-btn" id="bellBtn" title="Ծանուցումներ">🔔<span class="badge" id="bellBadge"></span></button>
+      <button class="icon-btn" id="setBtn" title="Կարգավորումներ">⚙️</button>
+      <div class="notif-panel" id="notifPanel">
+        <h3>Ծանուցումներ</h3>
+        <div class="notif-list" id="notifList"></div>
+      </div>
+    </div>
+  </header>
+  <div id="screen"></div>
+</div>
+
+<dialog id="returnDlg">
+  <h3>Վերադարձնել լրամշակման</h3>
+  <div class="fld"><label>Մեկնաբանություն հաշվապահի համար</label>
+    <textarea id="returnComment" placeholder="Ի՞նչ է պետք ուղղել…"></textarea></div>
+  <div class="actions" style="justify-content:flex-end">
+    <button class="btn btn-ghost btn-sm" id="returnCancel">Չեղարկել</button>
+    <button class="btn btn-red btn-sm" id="returnOk">Վերադարձնել</button>
+  </div>
+</dialog>
+
+<dialog id="pwDlg">
+  <h3 id="pwDlgTitle">Նոր գաղտնաբառ</h3>
+  <div class="err" id="pwErr"></div>
+  <div class="fld"><label>Նոր գաղտնաբառ (առնվազն 8 նիշ)</label>
+    <input type="password" id="pwNew" autocomplete="new-password"></div>
+  <div class="actions" style="justify-content:flex-end">
+    <button class="btn btn-ghost btn-sm" id="pwCancel">Չեղարկել</button>
+    <button class="btn btn-primary btn-sm" id="pwOk">Պահպանել</button>
+  </div>
+</dialog>
+
+<dialog id="setDlg">
+  <h3>Կարգավորումներ</h3>
+  <div class="settings-row">
+    <div><b style="font-size:14px">Push ծանուցումներ</b><div style="font-size:12px;color:var(--muted)">այս սարքի վրա</div></div>
+    <button class="btn btn-ghost btn-sm" id="pushToggle">…</button>
+  </div>
+  <div class="settings-row">
+    <div><b style="font-size:14px">Գաղտնաբառ</b></div>
+    <button class="btn btn-ghost btn-sm" id="changePwBtn">Փոխել</button>
+  </div>
+  <div class="settings-row" id="pinRow" style="display:none">
+    <div><b style="font-size:14px">PIN կոդ</b><div style="font-size:12px;color:var(--muted)">հավելվածը բացելիս</div></div>
+    <button class="btn btn-ghost btn-sm" id="changePinBtn">Փոխել</button>
+  </div>
+  <div class="settings-row">
+    <div><b style="font-size:14px">Ելք</b></div>
+    <button class="btn btn-red btn-sm" id="logoutBtn">Դուրս գալ</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+(function(){
+"use strict";
+// ======== НАСТРОЙКА (заполняется при установке) ========
+var SUPABASE_URL = "https://hilzfneuvkgkekecqscq.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_RAxwV_TRcqKYDTVx-LKc4Q_TKBkT-dW";
+var VAPID_PUBLIC_KEY = "BM9I4IHj2j1KOIjAa_88Fc_ar1UpsXZHJIiuISqdPdIdTXF1X-JoA6XuOqn_7OrXO6DjLk2XufVqodlkeaEG2yw";
+// =======================================================
+var IDLE_LOGOUT_MIN = 30;
+var MAX_FILE = 50*1024*1024;
+var BASE_TITLE = 'Առաջադրանքներ';
+
+
+var sb=(function(){
+  var uid=function(){return 'x'+Math.random().toString(36).slice(2,10)};
+  var ago=function(m){return new Date(Date.now()-m*60000).toISOString()};
+  var B='boss1',W1='w1',W2='w2';
+  var DB={
+    profiles:[
+      {id:B,name:'Արամ Գրիգորյան',role:'boss',active:true},
+      {id:W1,name:'Անի Սարգսյան',role:'worker',active:true},
+      {id:W2,name:'Մարինե Հակոբյան',role:'worker',active:true}
+    ],
+    tasks:[
+      {id:'t1',title:'Հարկային հաշվարկ՝ հոկտեմբեր',description:'Պատրաստել ԱԱՀ և շահութահարկի հաշվարկը հոկտեմբերի համար, ուղարկել Excel-ով։',due:null,assignee:W1,created_by:B,created_at:ago(300),accepted_at:null,returned_at:null,return_comment:null},
+      {id:'t2',title:'Աշխատավարձի տեղեկագիր',description:'Նոյեմբերի աշխատավարձի ամփոփ աղյուսակ բոլոր բաժինների համար։',due:null,assignee:W2,created_by:B,created_at:ago(200),accepted_at:null,returned_at:null,return_comment:null},
+      {id:'t3',title:'Պայմանագրերի համադրում',description:'Համադրել մատակարարների հետ փոխհաշվարկները։',due:null,assignee:null,created_by:B,created_at:ago(60),accepted_at:null,returned_at:null,return_comment:null},
+      {id:'t4',title:'Գույքագրման ցուցակ',description:'Հիմնական միջոցների թարմացված ցուցակ։',due:null,assignee:W1,created_by:B,created_at:ago(1500),accepted_at:ago(900),returned_at:null,return_comment:null}
+    ],
+    task_views:[
+      {task_id:'t1',user_id:W1,viewed_at:ago(280)},
+      {task_id:'t2',user_id:W2,viewed_at:ago(150)},
+      {task_id:'t4',user_id:W1,viewed_at:ago(1400)}
+    ],
+    submissions:[
+      {task_id:'t2',done_by:W2,done_at:ago(40),file_path:'demo/payroll.xlsx',file_name:'payroll_nov.xlsx',file_size:48213},
+      {task_id:'t4',done_by:W1,done_at:ago(1000),file_path:'demo/assets.xlsx',file_name:'assets.xlsx',file_size:22110}
+    ],
+    notifications:[
+      {id:'n1',recipient:B,title:'Աշխատանքը հանձնված է',body:'«Աշխատավարձի տեղեկագիր» — Մարինե Հակոբյան',created_at:ago(40),read_at:null},
+      {id:'n2',recipient:W1,title:'Նոր առաջադրանք',body:'«Հարկային հաշվարկ՝ հոկտեմբեր»',created_at:ago(300),read_at:ago(280)},
+      {id:'n3',recipient:W2,title:'Նոր առաջադրանք',body:'«Պայմանագրերի համադրում»',created_at:ago(60),read_at:null},
+      {id:'n4',recipient:W1,title:'Նոր առաջադրանք',body:'«Պայմանագրերի համադրում»',created_at:ago(60),read_at:null}
+    ],
+    push_subscriptions:[]
+  };
+  window.__DEMO_DB=DB;
+  var listeners=[];
+  function fireNotif(n){listeners.forEach(function(f){try{f({'new':n})}catch(e){}})}
+  function addNotif(rcpt,title,body){var n={id:uid(),recipient:rcpt,title:title,body:body,created_at:new Date().toISOString(),read_at:null};DB.notifications.push(n);fireNotif(n)}
+  var pk={tasks:'id',profiles:'id',notifications:'id',submissions:'task_id'};
+  function Q(tbl){
+    var q={tbl:tbl,op:'select',filters:[],ord:null,lim:null,data:null,single:false,conflict:null};
+    function exec(){
+      var rows=DB[tbl];
+      var f=function(r){return q.filters.every(function(x){return x(r)})};
+      if(q.op==='select'){
+        var out=rows.filter(f).map(function(r){return Object.assign({},r)});
+        if(q.ord)out.sort(function(a,b){var x=a[q.ord.c],y=b[q.ord.c];var c=x>y?1:x<y?-1:0;return q.ord.asc?c:-c});
+        if(q.lim)out=out.slice(0,q.lim);
+        if(q.single)return {data:out[0]||null,error:null};
+        return {data:out,error:null};
+      }
+      if(q.op==='insert'){
+        var d=Object.assign({},q.data);
+        if(tbl==='tasks'){d.id=uid();d.created_at=new Date().toISOString();d.accepted_at=null;d.returned_at=null;d.return_comment=null}
+        if(tbl==='task_views'){d.viewed_at=new Date().toISOString();
+          if(rows.some(function(r){return r.task_id===d.task_id&&r.user_id===d.user_id}))return {data:null,error:null}}
+        DB[tbl].push(d);
+        if(tbl==='tasks'){
+          if(d.assignee)addNotif(d.assignee,'Նոր առաջադրանք','«'+d.title+'»');
+          else DB.profiles.filter(function(p){return p.role==='worker'&&p.active}).forEach(function(p){addNotif(p.id,'Նոր առաջադրանք','«'+d.title+'»')});
+        }
+        return {data:null,error:null};
+      }
+      if(q.op==='upsert'){
+        var d2=Object.assign({},q.data);var key=pk[tbl];
+        var ex=rows.find(function(r){return r[key]===d2[key]});
+        if(ex)Object.assign(ex,d2);else rows.push(d2);
+        if(tbl==='submissions'){
+          var t=DB.tasks.find(function(x){return x.id===d2.task_id});
+          var w=DB.profiles.find(function(x){return x.id===d2.done_by});
+          DB.profiles.filter(function(p){return p.role==='boss'}).forEach(function(p){addNotif(p.id,'Աշխատանքը հանձնված է','«'+(t?t.title:'')+'» — '+(w?w.name:''))});
+        }
+        return {data:null,error:null};
+      }
+      if(q.op==='update'){
+        rows.filter(f).forEach(function(r){
+          var old=Object.assign({},r);Object.assign(r,q.data);
+          if(tbl==='tasks'){
+            var sub=DB.submissions.find(function(s){return s.task_id===r.id});
+            var rc=sub?sub.done_by:r.assignee;
+            if(r.accepted_at&&!old.accepted_at&&rc)addNotif(rc,'Աշխատանքն ընդունված է','«'+r.title+'»');
+            if(r.returned_at&&old.returned_at!==r.returned_at&&rc)addNotif(rc,'Վերադարձվել է լրամշակման','«'+r.title+'»'+(r.return_comment?' — '+r.return_comment:''));
+          }
+        });
+        return {data:null,error:null};
+      }
+      if(q.op==='delete'){
+        DB[tbl]=rows.filter(function(r){return !f(r)});
+        return {data:null,error:null};
+      }
+    }
+    var api={
+      select:function(){return api},
+      order:function(c,o){q.ord={c:c,asc:!(o&&o.ascending===false)};return api},
+      limit:function(n){q.lim=n;return api},
+      eq:function(c,v){q.filters.push(function(r){return r[c]===v});return api},
+      is:function(c,v){q.filters.push(function(r){return (r[c]==null)===(v==null)});return api},
+      maybeSingle:function(){q.single=true;return api},
+      insert:function(d){q.op='insert';q.data=d;return api},
+      upsert:function(d,o){q.op='upsert';q.data=d;return api},
+      update:function(d){q.op='update';q.data=d;return api},
+      delete:function(){q.op='delete';return api},
+      then:function(res,rej){return Promise.resolve().then(function(){return new Promise(function(r){setTimeout(r,60)})}).then(exec).then(res,rej)}
+    };
+    return api;
+  }
+  return {
+    from:Q,
+    storage:{from:function(){return {
+      upload:function(){return Promise.resolve({error:null})},
+      remove:function(){return Promise.resolve({error:null})},
+      createSignedUrl:function(){return Promise.resolve({data:{signedUrl:'data:text/plain;charset=utf-8,'+encodeURIComponent('Demo file — in the real app this is your uploaded Excel.')},error:null})}
+    }}},
+    channel:function(){var ch={on:function(t,f,cb){if(f&&f.table==='notifications'&&typeof cb==='function')listeners.push(cb);return ch},subscribe:function(){return ch}};return ch},
+    auth:{signOut:function(){return Promise.resolve()},updateUser:function(){return Promise.resolve({error:null})},onAuthStateChange:function(){}}
+  };
+})();
+
+var $=function(s,el){return (el||document).querySelector(s)};
+var screenEl=$('#screen');
+
+var me=null;            // profile {id,name,role}
+var session=null;
+var profiles=[], tasks=[], views=[], subs={}, notifs=[];
+var expanded={}, pendingFiles={}, returnTaskId=null, pwTargetUid=null;
+var flashTimer=null, flashOn=false, unreadNow=0;
+var isMobile=false;
+
+function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML}
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show')},3500)}
+function fmtDate(x){if(!x)return'';try{return new Date(x).toLocaleString('hy-AM',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
+function fmtDay(s){if(!s)return'';try{return new Date(s+'T00:00:00').toLocaleDateString('hy-AM',{day:'numeric',month:'long',year:'numeric'})}catch(e){return s}}
+function fmtSize(b){b=b||0;if(b<1024)return b+' Բ';if(b<1048576)return (b/1024).toFixed(0)+' ԿԲ';return (b/1048576).toFixed(1)+' ՄԲ'}
+function nameOf(id){if(!id)return 'Բոլոր հաշվապահները';var p=profiles.find(function(x){return x.id===id});return p?p.name:'…'}
+function showErr(sel,msg){var e=$(sel);if(!e)return;e.style.display=msg?'block':'none';e.textContent=msg||''}
+
+// ---------- звук / мигание вкладки ----------
+var audioCtx=null;
+document.addEventListener('pointerdown',function once(){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}document.removeEventListener('pointerdown',once)});
+function beep(){if(!audioCtx)return;try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=880;g.gain.setValueAtTime(0.0001,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.12,audioCtx.currentTime+0.02);g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.35);o.start();o.stop(audioCtx.currentTime+0.4)}catch(e){}}
+function updateFlash(){
+  if(unreadNow>0){if(!flashTimer){flashTimer=setInterval(function(){flashOn=!flashOn;try{document.title=flashOn?'🔔 '+BASE_TITLE:'('+unreadNow+') '+BASE_TITLE}catch(e){}},1500)}}
+  else if(flashTimer){clearInterval(flashTimer);flashTimer=null;flashOn=false;try{document.title=BASE_TITLE}catch(e){}}
+}
+
+// ---------- автовыход при неактивности ----------
+var idleTimer=null;
+function resetIdle(){
+  if(!session)return;
+  clearTimeout(idleTimer);
+  idleTimer=setTimeout(function(){ doLogout('Նստաշրջանը փակվեց անգործության պատճառով'); }, IDLE_LOGOUT_MIN*60*1000);
+}
+['pointerdown','keydown','scroll','touchstart'].forEach(function(ev){document.addEventListener(ev,resetIdle,{passive:true})});
+
+// ---------- PIN (локальная блокировка устройства) ----------
+function pinKey(){return 'pin_'+(me?me.id:'')}
+async function pinHash(pin,salt){
+  var data=new TextEncoder().encode(salt+':'+pin);
+  var h=await crypto.subtle.digest('SHA-256',data);
+  return Array.from(new Uint8Array(h)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+}
+function pinStored(){try{return JSON.parse(localStorage.getItem(pinKey())||'null')}catch(e){return null}}
+function pinSave(obj){try{localStorage.setItem(pinKey(),JSON.stringify(obj))}catch(e){}}
+function pinClear(){try{localStorage.removeItem(pinKey())}catch(e){}}
+
+function showPinScreen(mode,next){ // mode: 'set' | 'enter' | 'change'
+  var buf='', firstPin=null;
+  function title(){
+    if(mode==='set')return firstPin===null?'Ստեղծեք PIN կոդ':'Կրկնեք PIN կոդը';
+    if(mode==='change')return firstPin===null?'Նոր PIN կոդ':'Կրկնեք PIN կոդը';
+    return 'Մուտքագրեք PIN կոդը';
+  }
+  function renderPin(){
+    var dots='';for(var i=0;i<4;i++)dots+='<i class="'+(i<buf.length?'on':'')+'"></i>';
+    screenEl.innerHTML='<div class="center-card"><h2>🔒 '+title()+'</h2>'
+      +'<div class="sub">'+(mode==='enter'?'Հավելվածը պաշտպանված է':'4 թվանշան')+'</div>'
+      +'<div class="err" id="pinErr"></div>'
+      +'<div class="pin-dots">'+dots+'</div>'
+      +'<div class="pin-pad" id="pinPad"></div>'
+      +(mode==='enter'?'<div style="text-align:center;margin-top:14px"><button class="link-btn" id="pinForgot">Մոռացե՞լ եք PIN-ը — դուրս գալ</button></div>':'')
+      +'</div>';
+    var pad=$('#pinPad');
+    [1,2,3,4,5,6,7,8,9,'',0,'⌫'].forEach(function(k){
+      var b=document.createElement('button');
+      b.textContent=k===''?' ':String(k);
+      if(k==='')b.style.visibility='hidden';
+      b.addEventListener('click',function(){
+        if(k==='⌫'){buf=buf.slice(0,-1);renderPin();return}
+        if(buf.length>=4)return;
+        buf+=String(k);
+        if(buf.length===4)setTimeout(submit,120);
+        renderPin();
+      });
+      pad.appendChild(b);
+    });
+    var f=$('#pinForgot');
+    if(f)f.addEventListener('click',function(){pinClear();doLogout()});
+  }
+  async function submit(){
+    if(mode==='set'||mode==='change'){
+      if(firstPin===null){firstPin=buf;buf='';renderPin();return}
+      if(firstPin!==buf){firstPin=null;buf='';renderPin();showErr('#pinErr','Չհամընկավ, փորձեք նորից');return}
+      var salt=Math.random().toString(36).slice(2,10);
+      pinSave({salt:salt,hash:await pinHash(buf,salt)});
+      next();
+      return;
+    }
+    var st=pinStored();
+    if(!st){next();return}
+    if(await pinHash(buf,st.salt)===st.hash){next();return}
+    buf='';renderPin();showErr('#pinErr','Սխալ PIN');
+  }
+  renderPin();
+}
+
+// ---------- экраны входа ----------
+function showLoading(msg){screenEl.innerHTML='<div class="banner"><span class="spin"></span><div>'+esc(msg||'Բեռնվում է…')+'</div></div>'}
+function showLogin(msg){demoPicker();return;
+  $('#appHeader').style.display='none';
+  screenEl.innerHTML='<div class="center-card"><h2>📋 Առաջադրանքներ</h2>'
+    +'<div class="sub">Մուտք գործեք ձեր հաշվով</div>'
+    +'<div class="err" id="loginErr"></div>'
+    +'<div class="fld"><label>Email</label><input type="email" id="liEmail" autocomplete="username"></div>'
+    +'<div class="fld"><label>Գաղտնաբառ</label><input type="password" id="liPass" autocomplete="current-password"></div>'
+    +'<button class="btn btn-primary btn-full" id="liBtn">Մուտք գործել</button></div>';
+  if(msg)showErr('#loginErr',msg);
+  var go=async function(){
+    var email=$('#liEmail').value.trim(), pass=$('#liPass').value;
+    if(!email||!pass){showErr('#loginErr','Լրացրեք email-ը և գաղտնաբառը');return}
+    $('#liBtn').disabled=true;showLoadingBtn('#liBtn');
+    var r=await sb.auth.signInWithPassword({email:email,password:pass});
+    if(r.error){$('#liBtn').disabled=false;$('#liBtn').textContent='Մուտք գործել';showErr('#loginErr','Սխալ email կամ գաղտնաբառ');return}
+    boot();
+  };
+  $('#liBtn').addEventListener('click',go);
+  $('#liPass').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
+}
+function showLoadingBtn(sel){var b=$(sel);if(b)b.textContent='Սպասեք…'}
+
+// ---------- 2FA (Google Authenticator) ----------
+async function ensureAal2(){
+  var lv=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(lv.error)throw lv.error;
+  if(lv.data.currentLevel==='aal2')return true;
+  var f=await sb.auth.mfa.listFactors();
+  if(f.error)throw f.error;
+  var verified=(f.data.totp||[]).filter(function(x){return x.status==='verified'});
+  if(verified.length)return await mfaVerifyScreen(verified[0].id);
+  // чистим незавершённые попытки
+  var all=f.data.all||[];
+  for(var i=0;i<all.length;i++){
+    if(all[i].status!=='verified'){try{await sb.auth.mfa.unenroll({factorId:all[i].id})}catch(e){}}
+  }
+  return await mfaEnrollScreen();
+}
+function mfaEnrollScreen(){
+  return new Promise(async function(resolve){
+    var en=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'Authenticator'});
+    if(en.error){showLogin('Չհաջողվեց միացնել 2FA․ '+en.error.message);resolve(false);return}
+    var qr=en.data.totp.qr_code||'';
+    if(qr&&qr.indexOf('data:')!==0)qr='data:image/svg+xml;utf8,'+encodeURIComponent(qr);
+    screenEl.innerHTML='<div class="center-card"><h2>Պաշտպանություն՝ Google Authenticator</h2>'
+      +'<div class="sub">1․ Բացեք Google Authenticator հավելվածը հեռախոսում<br>2․ Սկանավորեք QR կոդը<br>3․ Մուտքագրեք 6-նիշ կոդը</div>'
+      +'<img class="qr" src="'+qr+'" alt="QR">'
+      +'<div class="secret-code">'+esc(en.data.totp.secret||'')+'</div>'
+      +'<div class="err" id="mfaErr"></div>'
+      +'<div class="fld"><label>Կոդը հավելվածից</label><input type="text" id="mfaCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>'
+      +'<button class="btn btn-primary btn-full" id="mfaBtn">Հաստատել</button></div>';
+    var go=async function(){
+      var code=$('#mfaCode').value.trim();
+      if(code.length<6){showErr('#mfaErr','Մուտքագրեք 6 թվանշան');return}
+      $('#mfaBtn').disabled=true;
+      var ch=await sb.auth.mfa.challenge({factorId:en.data.id});
+      if(ch.error){$('#mfaBtn').disabled=false;showErr('#mfaErr',ch.error.message);return}
+      var v=await sb.auth.mfa.verify({factorId:en.data.id,challengeId:ch.data.id,code:code});
+      if(v.error){$('#mfaBtn').disabled=false;showErr('#mfaErr','Սխալ կոդ, փորձեք նորից');return}
+      resolve(true);
+    };
+    $('#mfaBtn').addEventListener('click',go);
+    $('#mfaCode').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
+  });
+}
+function mfaVerifyScreen(factorId){
+  return new Promise(function(resolve){
+    screenEl.innerHTML='<div class="center-card"><h2>Մուտքի հաստատում</h2>'
+      +'<div class="sub">Մուտքագրեք կոդը Google Authenticator-ից</div>'
+      +'<div class="err" id="mfaErr"></div>'
+      +'<div class="fld"><label>6-նիշ կոդ</label><input type="text" id="mfaCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>'
+      +'<button class="btn btn-primary btn-full" id="mfaBtn">Հաստատել</button>'
+      +'<div style="text-align:center;margin-top:12px"><button class="link-btn" id="mfaBack">Դուրս գալ</button></div></div>';
+    $('#mfaBack').addEventListener('click',function(){doLogout()});
+    var go=async function(){
+      var code=$('#mfaCode').value.trim();
+      if(code.length<6){showErr('#mfaErr','Մուտքագրեք 6 թվանշան');return}
+      $('#mfaBtn').disabled=true;
+      var ch=await sb.auth.mfa.challenge({factorId:factorId});
+      if(ch.error){$('#mfaBtn').disabled=false;showErr('#mfaErr',ch.error.message);return}
+      var v=await sb.auth.mfa.verify({factorId:factorId,challengeId:ch.data.id,code:code});
+      if(v.error){$('#mfaBtn').disabled=false;showErr('#mfaErr','Սխալ կոդ, փորձեք նորից');return}
+      resolve(true);
+    };
+    $('#mfaBtn').addEventListener('click',go);
+    setTimeout(function(){var c=$('#mfaCode');if(c)c.focus()},100);
+    $('#mfaCode').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
+  });
+}
+
+// ---------- запуск ----------
+async function boot(){
+  showLoading();
+  var s=await sb.auth.getSession();
+  session=s.data.session;
+  if(!session){showLogin();return}
+  try{
+    var ok=await ensureAal2();
+    if(!ok)return;
+  }catch(e){showLogin('Սխալ․ փորձեք նորից');return}
+  var s2=await sb.auth.getSession();session=s2.data.session;
+  showLoading();
+  var pr=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle();
+  if(pr.error||!pr.data){
+    screenEl.innerHTML='<div class="banner">Ձեր հաշիվը դեռ կազմաձևված չէ կամ արգելափակված է։<br>Դիմեք ղեկավարին։<br><br><button class="btn btn-ghost btn-sm" onclick="location.reload()">Թարմացնել</button></div>';
+    await sb.auth.signOut();
+    return;
+  }
+  me=pr.data;
+  var proceed=function(){startApp()};
+  if(isMobile){
+    if(!pinStored())showPinScreen('set',proceed);
+    else showPinScreen('enter',proceed);
+  }else proceed();
+}
+
+async function startApp(){
+  $('#appHeader').style.display='';
+  $('#roleBadge').textContent=me.role==='boss'?'Ղեկավար':'Հաշվապահ';
+  $('#pinRow').style.display=isMobile?'':'none';
+  resetIdle();
+  await reloadAll();
+  subscribeRealtime();
+  registerSW();
+  updatePushBtn();
+}
+
+async function reloadAll(){
+  var r=await Promise.all([
+    sb.from('profiles').select('*').order('name'),
+    sb.from('tasks').select('*').order('created_at',{ascending:false}),
+    sb.from('task_views').select('*'),
+    sb.from('submissions').select('*'),
+    sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(30)
+  ]);
+  if(r[0].data)profiles=r[0].data;
+  if(r[1].data)tasks=r[1].data;
+  if(r[2].data)views=r[2].data;
+  if(r[3].data){subs={};r[3].data.forEach(function(s){subs[s.task_id]=s})}
+  if(r[4].data)notifs=r[4].data;
+  markVisibleViewed();
+  render();
+}
+
+var reloadQueued=false;
+function queueReload(){
+  if(reloadQueued)return;reloadQueued=true;
+  setTimeout(function(){reloadQueued=false;reloadAll()},300);
+}
+
+function subscribeRealtime(){
+  sb.channel('db-changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},queueReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'task_views'},queueReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'submissions'},queueReload)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications'},function(p){
+      var n=p['new'];
+      if(n&&n.recipient===me.id){toast('🔔 '+n.title+(n.body?'․ '+n.body:''));beep()}
+      queueReload();
+    })
+    .subscribe();
+}
+
+// ---------- push ----------
+var swReg=null;
+function registerSW(){return;
+  if(!('serviceWorker' in navigator))return;
+  navigator.serviceWorker.register('sw.js').then(function(r){swReg=r;updatePushBtn()}).catch(function(){});
+}
+function urlB64ToU8(s){
+  var pad='='.repeat((4-s.length%4)%4);
+  var b=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  var a=new Uint8Array(b.length);
+  for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);
+  return a;
+}
+async function getPushSub(){
+  if(!swReg)return null;
+  try{return await swReg.pushManager.getSubscription()}catch(e){return null}
+}
+async function updatePushBtn(){var _b=$('#pushToggle');if(_b){_b.textContent='Միացնել';_b.disabled=false}return;
+  var b=$('#pushToggle');if(!b)return;
+  if(!('Notification' in window)||!('PushManager' in window)){b.textContent='Չի աջակցվում';b.disabled=true;return}
+  var sub=await getPushSub();
+  b.textContent=sub?'Անջատել':'Միացնել';
+  b.disabled=false;
+}
+async function togglePush(){toast('Demo․ իրական հավելվածում այստեղ միանում է push-ը');return;
+  var b=$('#pushToggle');b.disabled=true;
+  try{
+    var sub=await getPushSub();
+    if(sub){
+      await sb.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);
+      await sub.unsubscribe();
+      toast('Push ծանուցումներն անջատված են');
+    }else{
+      var perm=await Notification.requestPermission();
+      if(perm!=='granted'){toast('Ծանուցումները արգելված են բրաուզերում');b.disabled=false;updatePushBtn();return}
+      if(!swReg)swReg=await navigator.serviceWorker.ready;
+      sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUBLIC_KEY)});
+      var j=sub.toJSON();
+      var ins=await sb.from('push_subscriptions').upsert({
+        user_id:me.id,endpoint:sub.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth
+      },{onConflict:'endpoint'});
+      if(ins.error){toast('Չհաջողվեց պահպանել բաժանորդագրությունը');await sub.unsubscribe()}
+      else toast('Push ծանուցումները միացված են այս սարքի վրա');
+    }
+  }catch(e){toast('Սխալ push-ի կարգավորման ժամանակ')}
+  updatePushBtn();
+}
+
+// ---------- derived ----------
+function statusOf(t){
+  if(t.accepted_at)return 'accepted';
+  var s=subs[t.id];
+  var ret=t.returned_at?new Date(t.returned_at).getTime():0;
+  if(s&&new Date(s.done_at).getTime()>ret)return 'done';
+  if(ret)return 'returned';
+  return views.some(function(v){return v.task_id===t.id})?'viewed':'new';
+}
+function chipFor(st,bossSide){
+  switch(st){
+    case 'accepted':return '<span class="chip accepted">✓ Ընդունված</span>';
+    case 'done':return '<span class="chip done">'+(bossSide?'Ստուգման է սպասում':'Ստուգման փուլում')+'</span>';
+    case 'returned':return '<span class="chip returned">Վերադարձված</span>';
+    case 'viewed':return '<span class="chip viewed">Դիտված</span>';
+    default:return '<span class="chip new">'+(bossSide?'Չդիտված':'Նոր')+'</span>';
+  }
+}
+function seenLine(t){
+  var vs=views.filter(function(v){return v.task_id===t.id});
+  if(!vs.length)return '<span class="seen">— դեռ չի դիտվել</span>';
+  var parts=vs.map(function(v){return esc(nameOf(v.user_id))+' ('+fmtDate(v.viewed_at)+')'});
+  return '<span class="seen"><span class="eye">👁</span> '+parts.join(', ')+'</span>';
+}
+
+// ---------- действия ----------
+var marking={};
+function markVisibleViewed(){
+  if(!me||me.role!=='worker')return;
+  tasks.forEach(function(t){
+    if(t.assignee&&t.assignee!==me.id)return;
+    if(views.some(function(v){return v.task_id===t.id&&v.user_id===me.id}))return;
+    if(marking[t.id])return;
+    marking[t.id]=true;
+    sb.from('task_views').insert({task_id:t.id,user_id:me.id}).then(function(){});
+  });
+}
+async function createTask(){
+  var title=$('#fTitle').value.trim();
+  if(!title){toast('Նշեք վերնագիրը');return}
+  var btn=$('#fCreate');btn.disabled=true;
+  var r=await sb.from('tasks').insert({
+    title:title,
+    description:$('#fDesc').value.trim(),
+    due:$('#fDue').value||null,
+    assignee:$('#fAssignee').value||null,
+    created_by:me.id
+  });
+  btn.disabled=false;
+  if(r.error){toast('Չհաջողվեց պահպանել');return}
+  $('#fTitle').value='';$('#fDesc').value='';$('#fDue').value='';$('#fAssignee').value='';
+  toast('Առաջադրանքը ստեղծված է');
+  queueReload();
+}
+async function markDone(t,btn){
+  btn.disabled=true;
+  var file=pendingFiles[t.id]||null;
+  var rec={task_id:t.id,done_by:me.id,done_at:new Date().toISOString()};
+  if(file){
+    if(file.size>MAX_FILE){toast('Ֆայլը 50 ՄԲ-ից մեծ է');btn.disabled=false;return}
+    btn.textContent='Բեռնում…';
+    var safe=file.name.replace(/[^\w.\-()Ա-և ]+/g,'_').slice(0,100);
+    var path=t.id+'/'+me.id+'/'+Date.now()+'_'+safe;
+    var up=await sb.storage.from('files').upload(path,file,{contentType:file.type||'application/octet-stream'});
+    if(up.error){toast('Չհաջողվեց բեռնել ֆայլը');btn.disabled=false;btn.textContent='✓ Նշել որպես կատարված';return}
+    rec.file_path=path;rec.file_name=file.name;rec.file_size=file.size;
+  }else{
+    var prev=subs[t.id];
+    if(prev&&prev.file_path){rec.file_path=prev.file_path;rec.file_name=prev.file_name;rec.file_size=prev.file_size}
+  }
+  var r=await sb.from('submissions').upsert(rec,{onConflict:'task_id'});
+  if(r.error){toast('Չհաջողվեց պահպանել');btn.disabled=false;btn.textContent='✓ Նշել որպես կատարված';return}
+  delete pendingFiles[t.id];
+  toast('Հանձնված է ստուգման');
+  queueReload();
+}
+async function downloadFile(s,btn){
+  if(!s||!s.file_path){toast('Ֆայլ չկա');return}
+  var old=btn.textContent;btn.disabled=true;btn.textContent='…';
+  var r=await sb.storage.from('files').createSignedUrl(s.file_path,120,{download:s.file_name||true});
+  btn.disabled=false;btn.textContent=old;
+  if(r.error||!r.data){toast('Չհաջողվեց ներբեռնել');return}
+  var a=document.createElement('a');a.href=r.data.signedUrl;a.download=s.file_name||'file';
+  document.body.appendChild(a);a.click();a.remove();
+}
+async function acceptTask(t){
+  var r=await sb.from('tasks').update({accepted_at:new Date().toISOString()}).eq('id',t.id);
+  if(r.error){toast('Չհաջողվեց');return}
+  toast('Աշխատանքն ընդունված է');queueReload();
+}
+async function deleteTask(t){
+  var s=subs[t.id];
+  if(s&&s.file_path)await sb.storage.from('files').remove([s.file_path]);
+  var r=await sb.from('tasks').delete().eq('id',t.id);
+  if(r.error){toast('Չհաջողվեց ջնջել');return}
+  toast('Ջնջված է');queueReload();
+}
+$('#returnCancel').addEventListener('click',function(){$('#returnDlg').close()});
+$('#returnOk').addEventListener('click',async function(){
+  var id=returnTaskId;$('#returnDlg').close();
+  if(!id)return;
+  var r=await sb.from('tasks').update({
+    returned_at:new Date().toISOString(),
+    return_comment:$('#returnComment').value.trim()||'Անհրաժեշտ են ուղղումներ',
+    accepted_at:null
+  }).eq('id',id);
+  if(r.error){toast('Չհաջողվեց');return}
+  toast('Վերադարձված է լրամշակման');queueReload();
+});
+
+// ---------- сотрудники (через Edge Function) ----------
+async function adminCall(body){
+  var P=window.__DEMO_DB.profiles;
+  if(body.action==='create'){P.push({id:'u'+Date.now(),name:body.name,role:body.role||'worker',active:true})}
+  else if(body.action==='deactivate'||body.action==='reactivate'){var p=P.find(function(x){return x.id===body.uid});if(p)p.active=body.action==='reactivate'}
+  return {ok:true};
+}
+async function createEmployee(){
+  var name=$('#eName').value.trim(), email=$('#eEmail').value.trim(),
+      pass=$('#ePass').value, role=$('#eRole').value;
+  if(!name||!email||pass.length<8){toast('Լրացրեք բոլոր դաշտերը (գաղտնաբառը՝ 8+ նիշ)');return}
+  var btn=$('#eCreate');btn.disabled=true;
+  var r=await adminCall({action:'create',name:name,email:email,password:pass,role:role});
+  btn.disabled=false;
+  if(r.error){toast('Սխալ․ '+r.error);return}
+  $('#eName').value='';$('#eEmail').value='';$('#ePass').value='';
+  toast('Աշխատակիցը ստեղծված է');
+  queueReload();
+}
+
+// ---------- колокольчик ----------
+function renderBell(){
+  var unread=notifs.filter(function(n){return !n.read_at}).length;
+  unreadNow=unread;updateFlash();
+  var badge=$('#bellBadge');
+  if(unread>0){badge.style.display='block';badge.textContent=unread>9?'9+':unread}else badge.style.display='none';
+  var list=$('#notifList');
+  if(!notifs.length){list.innerHTML='<div class="notif-empty">Ծանուցումներ չկան</div>';return}
+  list.innerHTML=notifs.map(function(n){
+    return '<div class="notif-item'+(n.read_at?'':' unread')+'">'+esc(n.title)+(n.body?('<br>'+esc(n.body)):'')+'<span class="when">'+fmtDate(n.created_at)+'</span></div>';
+  }).join('');
+}
+$('#bellBtn').addEventListener('click',async function(e){
+  e.stopPropagation();
+  var p=$('#notifPanel');
+  var opening=!p.classList.contains('open');
+  p.classList.toggle('open');
+  if(opening){
+    renderBell();
+    await sb.from('notifications').update({read_at:new Date().toISOString()}).is('read_at',null).eq('recipient',me.id);
+    setTimeout(queueReload,300);
+  }
+});
+document.addEventListener('click',function(e){
+  var p=$('#notifPanel');
+  if(p.classList.contains('open')&&!p.contains(e.target))p.classList.remove('open');
+});
+
+// ---------- настройки ----------
+$('#setBtn').addEventListener('click',function(){updatePushBtn();$('#setDlg').showModal()});
+$('#pushToggle').addEventListener('click',togglePush);
+$('#logoutBtn').addEventListener('click',function(){$('#setDlg').close();doLogout()});
+$('#changePinBtn').addEventListener('click',function(){
+  $('#setDlg').close();
+  showPinScreen('change',function(){toast('PIN-ը փոխված է');render()});
+});
+$('#changePwBtn').addEventListener('click',function(){
+  pwTargetUid=null;
+  $('#pwDlgTitle').textContent='Փոխել իմ գաղտնաբառը';
+  $('#pwNew').value='';showErr('#pwErr','');
+  $('#setDlg').close();$('#pwDlg').showModal();
+});
+$('#pwCancel').addEventListener('click',function(){$('#pwDlg').close()});
+$('#pwOk').addEventListener('click',async function(){
+  var p=$('#pwNew').value;
+  if(p.length<8){showErr('#pwErr','Առնվազն 8 նիշ');return}
+  $('#pwOk').disabled=true;
+  var ok;
+  if(pwTargetUid){
+    var r=await adminCall({action:'resetpw',uid:pwTargetUid,password:p});
+    ok=!r.error; if(!ok)showErr('#pwErr',r.error);
+  }else{
+    var r2=await sb.auth.updateUser({password:p});
+    ok=!r2.error; if(!ok)showErr('#pwErr',r2.error.message);
+  }
+  $('#pwOk').disabled=false;
+  if(ok){$('#pwDlg').close();toast('Գաղտնաբառը փոխված է')}
+});
+async function doLogout(msg){
+  try{await sb.auth.signOut()}catch(e){}
+  session=null;me=null;clearTimeout(idleTimer);
+  unreadNow=0;updateFlash();
+  showLogin(msg||null);
+}
+
+// ---------- рендер ----------
+function render(){
+  if(!me)return;
+  renderBell();
+  var h='';
+  if(me.role==='boss')h=renderBoss();else h=renderWorker();
+  screenEl.innerHTML=h;
+  bindEvents();
+}
+function renderBoss(){
+  var withSt=tasks.map(function(t){return {t:t,st:statusOf(t)}});
+  var open=withSt.filter(function(x){return x.st!=='accepted'});
+  var onReview=withSt.filter(function(x){return x.st==='done'});
+  var accepted=withSt.filter(function(x){return x.st==='accepted'});
+  var workers=profiles.filter(function(p){return p.active});
+  var h='<div class="counts">'
+    +'<div class="count-card"><div class="n">'+open.length+'</div><div class="t">ընթացքի մեջ</div></div>'
+    +'<div class="count-card"><div class="n">'+onReview.length+'</div><div class="t">ստուգման</div></div>'
+    +'<div class="count-card"><div class="n">'+accepted.length+'</div><div class="t">ընդունված</div></div>'
+    +'</div>';
+  h+='<div class="panel"><h2>Նոր առաջադրանք</h2>'
+    +'<div class="fld"><label>Վերնագիր</label><input type="text" id="fTitle"></div>'
+    +'<div class="fld"><label>Նկարագրություն</label><textarea id="fDesc"></textarea></div>'
+    +'<div class="row2">'
+    +'<div class="fld"><label>Ում</label><select id="fAssignee"><option value="">Բոլոր հաշվապահները</option>'
+    +workers.filter(function(p){return p.role==='worker'}).map(function(p){return '<option value="'+p.id+'">'+esc(p.name)+'</option>'}).join('')
+    +'</select></div>'
+    +'<div class="fld"><label>Վերջնաժամկետ</label><input type="date" id="fDue"></div>'
+    +'</div><button class="btn btn-primary" id="fCreate">Հանձնարարել</button></div>';
+
+  var act=withSt.filter(function(x){return x.st!=='accepted'});
+  if(act.length){h+='<div class="section-label">Ընթացիկ առաջադրանքներ</div>';act.forEach(function(x){h+=taskCard(x.t,x.st,true)})}
+  else h+='<div class="empty">Ընթացիկ առաջադրանքներ չկան</div>';
+  if(accepted.length){h+='<div class="section-label">Ընդունված</div>';accepted.forEach(function(x){h+=taskCard(x.t,x.st,true)})}
+
+  h+='<div class="section-label">Աշխատակիցներ</div><div class="panel">';
+  h+=profiles.map(function(p){
+    return '<div class="emp-row">'
+      +'<div><div class="emp-name">'+esc(p.name)+' '
+      +'<span class="tag '+(p.role==='boss'?'boss':'worker')+'">'+(p.role==='boss'?'Ղեկավար':'Հաշվապահ')+'</span>'
+      +(p.active?'':' <span class="tag off">Արգելափակված</span>')+'</div></div>'
+      +'<div class="emp-actions">'
+      +(p.id!==me.id?('<button class="btn btn-ghost btn-sm" data-emp-pw="'+p.id+'">Գաղտնաբառ</button>'
+        +'<button class="btn btn-ghost btn-sm" data-emp-mfa="'+p.id+'">2FA սկզբ․</button>'
+        +(p.active
+          ?'<button class="btn btn-red btn-sm" data-emp-off="'+p.id+'">Արգելափակել</button>'
+          :'<button class="btn btn-green btn-sm" data-emp-on="'+p.id+'">Ակտիվացնել</button>')):'')
+      +'</div></div>';
+  }).join('');
+  h+='<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:14px"><b style="font-size:14px">Ավելացնել աշխատակից</b>'
+    +'<div class="row2" style="margin-top:10px">'
+    +'<div class="fld"><label>Անուն</label><input type="text" id="eName"></div>'
+    +'<div class="fld"><label>Email</label><input type="email" id="eEmail"></div>'
+    +'<div class="fld"><label>Գաղտնաբառ (8+)</label><input type="text" id="ePass"></div>'
+    +'<div class="fld"><label>Դեր</label><select id="eRole"><option value="worker">Հաշվապահ</option><option value="boss">Ղեկավար</option></select></div>'
+    +'</div><button class="btn btn-primary btn-sm" id="eCreate">Ստեղծել</button>'
+    +'<div style="font-size:12px;color:var(--muted);margin-top:8px">Առաջին մուտքի ժամանակ աշխատակիցը կսկանավորի QR կոդը Google Authenticator-ով։</div>'
+    +'</div></div>';
+  return h;
+}
+function renderWorker(){
+  var mine=tasks.filter(function(t){return !t.assignee||t.assignee===me.id})
+    .map(function(t){return {t:t,st:statusOf(t)}});
+  if(!mine.length)return '<div class="empty">Ձեզ համար դեռ առաջադրանքներ չկան</div>';
+  var todo=mine.filter(function(x){return x.st!=='accepted'&&x.st!=='done'});
+  var waiting=mine.filter(function(x){return x.st==='done'});
+  var done=mine.filter(function(x){return x.st==='accepted'});
+  var h='';
+  if(todo.length){h+='<div class="section-label">Պետք է կատարել</div>';todo.forEach(function(x){h+=taskCard(x.t,x.st,false)})}
+  if(waiting.length){h+='<div class="section-label">Ստուգման փուլում</div>';waiting.forEach(function(x){h+=taskCard(x.t,x.st,false)})}
+  if(done.length){h+='<div class="section-label">Ընդունված</div>';done.forEach(function(x){h+=taskCard(x.t,x.st,false)})}
+  return h;
+}
+function taskCard(t,st,bossSide){
+  var isOpen=!!expanded[t.id];
+  var s=subs[t.id];
+  var sub=[];
+  if(bossSide)sub.push('Ում՝ '+esc(nameOf(t.assignee)));
+  if(t.due)sub.push('Վերջնաժամկետ՝ '+esc(fmtDay(t.due)));
+  sub.push('Ստեղծվել է '+fmtDate(t.created_at));
+  var h='<div class="task" data-id="'+t.id+'">'
+    +'<div class="task-head" data-act="toggle">'
+    +'<div><div class="task-title">'+esc(t.title)+'</div><div class="task-sub">'+sub.join(' · ')+'</div></div>'
+    +'<div class="task-right">'+chipFor(st,bossSide)+(bossSide?seenLine(t):'')+'</div>'
+    +'</div>';
+  if(isOpen){
+    h+='<div class="task-body">';
+    if(t.description)h+='<div class="task-desc">'+esc(t.description)+'</div>';
+    if(st==='returned'&&t.return_comment)h+='<div class="return-note">↩ Վերադարձվել է լրամշակման․ '+esc(t.return_comment)+'</div>';
+    if(s&&s.file_path){
+      h+='<div class="file-pill">📎 <b>'+esc(s.file_name||'ֆայլ')+'</b> <span style="color:var(--muted)">'+fmtSize(s.file_size)+'</span>'
+        +' <button class="btn btn-ghost btn-sm" data-act="download">Ներբեռնել</button></div>';
+    }
+    if(s)h+='<div class="meta-line">Կատարվել է՝ '+fmtDate(s.done_at)+' · '+esc(nameOf(s.done_by))+'</div>';
+    if(bossSide){
+      if(st==='done'){
+        h+='<div class="actions"><button class="btn btn-green" data-act="accept">✓ Ընդունել աշխատանքը</button>'
+          +'<button class="btn btn-red" data-act="return">Վերադարձնել լրամշակման</button></div>';
+      }
+      if(st==='accepted'&&t.accepted_at)h+='<div class="meta-line">Ընդունվել է՝ '+fmtDate(t.accepted_at)+'</div>';
+      h+='<div class="actions"><button class="btn btn-ghost btn-sm" data-act="delete">Ջնջել առաջադրանքը</button></div>';
+    }else{
+      if(st!=='done'&&st!=='accepted'){
+        var pf=pendingFiles[t.id];
+        h+='<div class="upload-zone" data-act="pick">'+(pf?('📎 '+esc(pf.name)+' ('+fmtSize(pf.size)+') — սեղմեք՝ փոխարինելու')
+          :'📎 Կցել Excel ֆայլ (xlsx, xls, csv, pdf)')+'</div>'
+          +'<input type="file" data-file accept=".xlsx,.xls,.csv,.pdf" style="display:none">'
+          +'<div class="actions"><button class="btn btn-primary" data-act="done">✓ Նշել որպես կատարված</button></div>';
+      }
+      if(st==='done')h+='<div class="meta-line">Ուղարկված է ստուգման։ Սպասեք ղեկավարի որոշմանը։</div>';
+      if(st==='accepted'&&t.accepted_at)h+='<div class="meta-line">✓ Ընդունվել է '+fmtDate(t.accepted_at)+'</div>';
+    }
+    h+='</div>';
+  }
+  return h+'</div>';
+}
+function bindEvents(){
+  screenEl.querySelectorAll('.task').forEach(function(card){
+    var id=card.getAttribute('data-id');
+    var t=tasks.find(function(x){return x.id===id});
+    if(!t)return;
+    var s=subs[id];
+    card.querySelector('[data-act=toggle]').addEventListener('click',function(){expanded[id]=!expanded[id];render()});
+    var dl=card.querySelector('[data-act=download]');if(dl)dl.addEventListener('click',function(e){e.stopPropagation();downloadFile(s,dl)});
+    var ac=card.querySelector('[data-act=accept]');if(ac)ac.addEventListener('click',function(){acceptTask(t)});
+    var rt=card.querySelector('[data-act=return]');if(rt)rt.addEventListener('click',function(){returnTaskId=t.id;$('#returnComment').value='';$('#returnDlg').showModal()});
+    var del=card.querySelector('[data-act=delete]');if(del)del.addEventListener('click',function(){if(del.dataset.sure)deleteTask(t);else{del.dataset.sure='1';del.textContent='Վստա՞հ եք — կրկին սեղմեք'}});
+    var pick=card.querySelector('[data-act=pick]');
+    var fi=card.querySelector('[data-file]');
+    if(pick&&fi){
+      pick.addEventListener('click',function(){fi.click()});
+      fi.addEventListener('change',function(){if(fi.files&&fi.files[0]){if(fi.files[0].size>MAX_FILE){toast('Ֆայլը 50 ՄԲ-ից մեծ է');return}pendingFiles[id]=fi.files[0];render()}});
+    }
+    var dn=card.querySelector('[data-act=done]');if(dn)dn.addEventListener('click',function(){markDone(t,dn)});
+  });
+  var c=$('#fCreate');if(c)c.addEventListener('click',createTask);
+  var ec=$('#eCreate');if(ec)ec.addEventListener('click',createEmployee);
+  screenEl.querySelectorAll('[data-emp-off]').forEach(function(b){b.addEventListener('click',async function(){
+    if(!b.dataset.sure){b.dataset.sure='1';b.textContent='Հաստատե՞լ';return}
+    var r=await adminCall({action:'deactivate',uid:b.getAttribute('data-emp-off')});
+    if(r.error)toast('Սխալ․ '+r.error);else{toast('Արգելափակված է');queueReload()}
+  })});
+  screenEl.querySelectorAll('[data-emp-on]').forEach(function(b){b.addEventListener('click',async function(){
+    var r=await adminCall({action:'reactivate',uid:b.getAttribute('data-emp-on')});
+    if(r.error)toast('Սխալ․ '+r.error);else{toast('Ակտիվացված է');queueReload()}
+  })});
+  screenEl.querySelectorAll('[data-emp-pw]').forEach(function(b){b.addEventListener('click',function(){
+    pwTargetUid=b.getAttribute('data-emp-pw');
+    $('#pwDlgTitle').textContent='Նոր գաղտնաբառ աշխատակցի համար';
+    $('#pwNew').value='';showErr('#pwErr','');
+    $('#pwDlg').showModal();
+  })});
+  screenEl.querySelectorAll('[data-emp-mfa]').forEach(function(b){b.addEventListener('click',async function(){
+    if(!b.dataset.sure){b.dataset.sure='1';b.textContent='Հաստատե՞լ';return}
+    var r=await adminCall({action:'resetmfa',uid:b.getAttribute('data-emp-mfa')});
+    if(r.error)toast('Սխալ․ '+r.error);else toast('2FA-ն սկզբնավորված է․ հաջորդ մուտքին նոր QR կոդ');
+  })});
+}
+
+
+
+var DEMO_USERS={boss1:'boss',w1:'worker',w2:'worker'};
+function demoPicker(){
+  $('#appHeader').style.display='none';
+  screenEl.innerHTML='<div class="center-card"><h2>📋 Առաջադրանքներ</h2><div class="sub">Demo տարբերակ․ ընտրեք դերը</div>'
+   +'<button class="btn btn-primary btn-full" data-u="boss1" style="margin-bottom:10px">👔 Մուտք որպես ղեկավար (Արամ)</button>'
+   +'<button class="btn btn-full" data-u="w1" style="margin-bottom:10px;background:#e8eefc;color:#2457d6">🧾 Մուտք որպես հաշվապահ Անի</button>'
+   +'<button class="btn btn-full" data-u="w2" style="background:#e8eefc;color:#2457d6">🧾 Մուտք որպես հաշվապահ Մարինե</button></div>';
+  screenEl.querySelectorAll('[data-u]').forEach(function(b){b.addEventListener('click',function(){demoLogin(b.getAttribute('data-u'))})});
+  window.__demoUid=null;demoBar();
+}
+async function demoLogin(id){
+  me=window.__DEMO_DB.profiles.find(function(p){return p.id===id});
+  session={user:{id:id}};
+  window.__demoUid=id;
+  await startApp();demoBar();
+}
+window.__demoSwitch=function(id){if(id==='out'){doLogout();return}demoLogin(id)};
+window.__demoPhone=function(){document.body.classList.toggle('phone')};
+function demoBar(){
+  var b=document.getElementById('demoBar');
+  if(!b){b=document.createElement('div');b.id='demoBar';document.body.insertBefore(b,document.body.firstChild)}
+  var u=window.__demoUid;
+  function btn(id,l){return '<button onclick="__demoSwitch(\''+id+'\')" class="'+(u===id?'on':'')+'">'+l+'</button>'}
+  b.innerHTML='<b>DEMO</b> '+btn('boss1','👔 Шеф')+btn('w1','🧾 Работник Ани')+btn('w2','🧾 Работник Марине')+'<button onclick="__demoPhone()">📱 вид телефона</button>';
+}
+demoPicker();
+})();
+</script>
+</body>
+</html>
