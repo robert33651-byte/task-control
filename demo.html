@@ -335,8 +335,8 @@ function esc(s){var d=document.createElement('div');d.textContent=s==null?'':Str
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show')},3500)}
 var HY_MONTHS=['հունվարի','փետրվարի','մարտի','ապրիլի','մայիսի','հունիսի','հուլիսի','օգոստոսի','սեպտեմբերի','հոկտեմբերի','նոյեմբերի','դեկտեմբերի'];
 function p2(n){return (n<10?'0':'')+n}
-function fmtDate(x){if(!x)return'';try{var d=new Date(x);if(isNaN(d))return'';return d.getDate()+' '+HY_MONTHS[d.getMonth()]+', '+p2(d.getHours())+':'+p2(d.getMinutes())}catch(e){return''}}
-function fmtDay(s){if(!s)return'';try{var d=new Date(s+'T00:00:00');if(isNaN(d))return s;return d.getDate()+' '+HY_MONTHS[d.getMonth()]+' '+d.getFullYear()+' թ.'}catch(e){return s}}
+function fmtDay(s){if(!s)return'';try{var d=new Date(s+'T00:00:00');if(isNaN(d))return s;return p2(d.getDate())+'.'+p2(d.getMonth()+1)+'.'+p2(d.getFullYear()%100)+'թ.'}catch(e){return s}}
+function fmtDate(x){if(!x)return'';try{var d=new Date(x);if(isNaN(d))return'';return fmtDay(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()))+' '+p2(d.getHours())+':'+p2(d.getMinutes())}catch(e){return''}}
 function fmtSize(b){b=b||0;if(b<1024)return b+' Բ';if(b<1048576)return (b/1024).toFixed(0)+' ԿԲ';return (b/1048576).toFixed(1)+' ՄԲ'}
 function nameOf(id){if(!id)return 'Բոլոր հաշվապահները';var p=profiles.find(function(x){return x.id===id});return p?p.name:'…'}
 function showErr(sel,msg){var e=$(sel);if(!e)return;e.style.display=msg?'block':'none';e.textContent=msg||''}
